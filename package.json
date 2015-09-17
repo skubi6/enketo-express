@@ -80,8 +80,7 @@
     "aliasify": {
         "aliases": {
             "text!enketo-config": "./public/temp-client-config.json",
-            "enketo-config": "./public/temp-client-config.json",
-            "widgets": "./node_modules/enketo-core/src/js/widgets-unga.js"
+            "enketo-config": "./public/temp-client-config.json"
         }
     }
 }
