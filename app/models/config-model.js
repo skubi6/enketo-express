@@ -22,7 +22,7 @@ function getThemesSupported( themeList ) {
     var themes = [];
     if ( fs.existsSync( themePath ) ) {
         fs.readdirSync( themePath ).forEach( function( file ) {
-            var matches = file.match( /^theme-([A-z]+)\.css$/ );
+            var matches = file.match( /^theme-([A-z\-]+)\.css$/ );
             if ( matches && matches.length > 1 ) {
                 if ( themeList !== undefined && themeList.length ) {
                     if ( themeList.indexOf( matches[ 1 ] ) !== -1 ) {
