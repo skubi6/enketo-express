@@ -35,5 +35,18 @@
 // components
 @import "../component/side-slider";
 @import "form-grid";
-@import "../component/form_header";
+
+//@import "../component/form_header";
 @import "../component/form_footer";
+
+// hacks
+.form-footer {
+    margin-top: -45px;
+    margin-bottom: 0;
+    .enketo-power {
+        margin-top: -50px;
+        img {
+            width: 53px;
+        }
+    }
+}
