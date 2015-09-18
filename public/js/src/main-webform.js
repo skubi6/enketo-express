@@ -30,7 +30,7 @@ _setEmergencyHandlers();
 if ( settings.offline ) {
     console.debug( 'in offline mode' );
     formCache.init( survey )
-        .then( _swapTheme )
+        //.then( _swapTheme )
         .then( _init )
         .then( formCache.updateMaxSubmissionSize )
         .then( formCache.updateMedia )
@@ -44,7 +44,7 @@ if ( settings.offline ) {
 } else {
     console.debug( 'in online mode' );
     connection.getFormParts( survey )
-        .then( _swapTheme )
+        //.then( _swapTheme )
         .then( _init )
         .then( connection.getMaximumSubmissionSize )
         .then( function( maxSize ) {
