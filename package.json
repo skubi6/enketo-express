@@ -24,7 +24,7 @@
         "csurf": "1.8.x",
         "db.js": "0.10.x",
         "debug": "2.x.x",
-        "enketo-core": "https://github.com/kobotoolbox/enketo-core.git#unga",
+        "enketo-core": "https://github.com/kobotoolbox/enketo-core.git#7cf4bfa",
         "enketo-transformer": "1.5.2",
         "express": "4.x.x",
         "i18next": "1.10.x",
