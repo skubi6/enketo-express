@@ -28,7 +28,11 @@ block content
       include component/_form-footer
   section.unga-footer
     img.myo(src="/images/logo-myo.png")
-    img.kobo(src="/images/logo-kobo.svg")
+    a(href="http://kobotoolbox.org/") 
+      img.kobo(src="/images/logo-kobo.png")
+    a(href="https://enketo.org")
+      img.enketo(src="/images/logo-enketo.png")
+
   if manifest
     include component/_side-slider
   include component/_feedback-bar
