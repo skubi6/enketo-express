@@ -1,3 +1,10 @@
 @import url(https://fonts.googleapis.com/css?family=Oswald:400,300,700&subset=latin,latin-ext);
 
 @import "../../../lib/font-awesome/scss/font-awesome";
+
+@font-face {
+    font-family: 'enketo-icons';
+    src: url("/fonts/enketo-icons-v2.woff") format("woff"), url("/fonts/enketo-icons-v2.ttf") format("truetype"), url("/fonts/enketo-icons-v2.svg#enketo-icons") format("svg");
+    font-weight: normal;
+    font-style: normal;
+}
