@@ -16,6 +16,7 @@ config/config.json
 enketo-main.rdb
 setup/docker/envfile.txt
 setup/docker/secrets/*
+setup/docker/redis_main_data/*
 logs/submissions*
 logs/logrotate
 public/temp-client-config.json
