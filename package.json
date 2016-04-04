@@ -30,7 +30,7 @@
         "csurf": "1.8.x",
         "db.js": "0.13.2",
         "debug": "2.x.x",
-        "enketo-core": "4.5.13",
+        "enketo-core": "https://github.com/kobotoolbox/enketo-core.git#f32352d2ec2e917c8c1681ea6c26d1a18fd581b8",
         "enketo-transformer": "1.7.6",
         "express": "4.x.x",
         "grunt": "0.4.x",
@@ -90,7 +90,6 @@
         "aliases": {
             "text!enketo-config": "./public/temp-client-config.json",
             "enketo-config": "./public/temp-client-config.json",
-            "widgets": "./public/js/src/module/widgets",
             "translator": "./public/js/src/module/translator",
             "../../js/file-manager": "./public/js/src/module/file-manager"
         }
