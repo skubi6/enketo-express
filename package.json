@@ -30,7 +30,7 @@
         "csurf": "1.8.x",
         "db.js": "0.13.2",
         "debug": "2.x.x",
-        "enketo-core": "https://github.com/kobotoolbox/enketo-core.git#f32352d2ec2e917c8c1681ea6c26d1a18fd581b8",
+        "enketo-core": "https://github.com/kobotoolbox/enketo-core.git#33ddfe56b4698066d81a2350922433dc89ee81fb",
         "enketo-transformer": "1.7.6",
         "express": "4.x.x",
         "grunt": "0.4.x",
