@@ -1,5 +1,6 @@
 if ( typeof exports === 'object' && typeof exports.nodeName !== 'string' && typeof define !== 'function' ) {
     var define = function( factory ) {
+        'use strict';
         factory( require, exports, module );
     };
 }

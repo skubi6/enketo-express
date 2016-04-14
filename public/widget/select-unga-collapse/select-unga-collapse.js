@@ -1,5 +1,6 @@
 if ( typeof exports === 'object' && typeof exports.nodeName !== 'string' && typeof define !== 'function' ) {
     var define = function( factory ) {
+        'use strict';
         factory( require, exports, module );
     };
 }
@@ -47,7 +48,7 @@ define( function( require, exports, module ) {
             $labelEl.append( $collapseButton );
 
             that._setButtonHandler( $collapseButton );
-        } )
+        } );
     };
 
     SelectPickerUngaCollapse.prototype._renderLabels = function() {

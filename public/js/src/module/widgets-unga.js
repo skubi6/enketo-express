@@ -1,10 +1,12 @@
 if ( typeof exports === 'object' && typeof exports.nodeName !== 'string' && typeof define !== 'function' ) {
     var define = function( factory ) {
+        'use strict';
         factory( require, exports, module );
     };
 }
 
 define( function( require, exports, module ) {
+    'use strict';
     var widgets = [
         require( '../../../widget/select-random/selectrandomizer' ),
         require( '../../../widget/unga-header/header' ),
