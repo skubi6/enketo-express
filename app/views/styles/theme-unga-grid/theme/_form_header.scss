@@ -1,0 +1,44 @@
+// General and header styles
+
+body {
+    padding: 0px;
+    margin: 0px;
+    font-family: 'Oswald', Arial, sans-serif;
+}
+
+.main {
+    padding-top: 0px;
+}
+
+.main .paper {
+    box-shadow: none;
+    border: none;
+    padding: 0px;
+    background-color: transparent;
+}
+
+.form-header {
+    position: static;
+    //height: 592px;
+    color: white;
+    text-transform: uppercase;
+    padding: 0px;
+    border-bottom: none;
+    .form-language-selector {
+        float: none;
+        margin: 0px;
+    }
+    #form-languages {
+        position: absolute;
+        top: 15px;
+        z-index: 10;
+        font-weight: bold;
+        font-size: 1em;
+        height: 21px;
+        width: 90px;
+        border: 1px solid #CCC;
+        color: #000000;
+        background-color: #ffffff;
+        font-family: 'Oswald', Arial, sans-serif;
+    }
+}

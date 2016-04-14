@@ -4,13 +4,12 @@
 // variables
 @import "../../../../node_modules/enketo-core/src/sass/grid/variables";
 @import "../../../../node_modules/enketo-core/src/sass/core/variables";
-@import "../../../../node_modules/enketo-core/src/sass/unga-grid/variables";
+@import "./theme/variables";
 
 // mixins, in the right order
 @import "../../../../node_modules/enketo-core/src/sass/core/mixins";
 @import "../../../../node_modules/enketo-core/src/sass/formhub/mixins";
 @import "../../../../node_modules/enketo-core/src/sass/grid/mixins";
-@import "../../../../node_modules/enketo-core/src/sass/unga-grid/mixins";
 @import "../component/mixins";
 
 // reset

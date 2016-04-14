@@ -1,0 +1,87 @@
+.or > .or-appearance-header {
+    height: 592px;
+    background-position-x: 50%;
+    background-position-y: 0%;
+    background-repeat-x: repeat;
+    background-repeat-y: no-repeat;
+    margin-bottom: 25px;
+    img {
+        display: none;
+    }
+    .question-label {
+        position: absolute;
+        left: 50%;
+        top: 395px;
+        background-color: transparent;
+        width: 455px;
+        margin-left: -236px;
+        color: white;
+        font-family: 'Oswald', Arial, sans-serif;
+        font-size: 34px;
+        font-weight: normal;
+        padding: 25px;
+        border: 3px solid #FFF;
+        text-align: center;
+        cursor: pointer;
+        &:before {
+            content: '';
+            width: 2px;
+            height: 75px;
+            position: absolute;
+            top: -75px;
+            background-color: #FFF;
+            left: 50%;
+        }
+        &:after {
+            content: '';
+            width: 2px;
+            height: 120px;
+            position: absolute;
+            background-color: #FFF;
+            left: 50%;
+            top: 100%;
+        }
+        &:hover {
+            opacity: 0.7;
+        }
+    }
+    .btn-scroll-to-first {
+        position: absolute;
+        top: 525px;
+        left: calc(50% - 1px);
+        width: 32px;
+        height: 32px;
+        margin-left: -22px;
+        background-color: #93BFE6;
+        border-radius: 16px;
+        color: white;
+        border: 2px solid white;
+        opacity: 1;
+        transition: all 0.5s;
+        padding: 0px;
+        line-height: 29px;
+        &:hover {
+            opacity: 1;
+            color: white;
+            background-color: darken(#93bfe6, 10%);
+        }
+    }
+}
+
+@media screen and (max-width: 540px) {
+    .or > .or-appearance-header {
+        .question-label {
+            width: 100%;
+            left: 0px;
+            top: 350px;
+            margin: 0px;
+            font-size: 22px;
+            &:before {
+                display: none;
+            }
+            &:after {
+                display: none;
+            }
+        }
+    }
+}

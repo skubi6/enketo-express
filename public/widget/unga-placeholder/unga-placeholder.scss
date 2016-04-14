@@ -1,0 +1,35 @@
+// needs to look similar to unga-placeholder-minimal
+.question.or-appearance-unga-placeholder {
+    background-color: #F3F3F3;
+    border: 1px solid #CCC;
+    padding-bottom: 2px;
+    margin: 6px;
+    padding-left: 32px;
+    position: relative;
+    .question-label {
+        display: none;
+    }
+    &:hover {
+        background-color: #F3F3F3 !important;
+    }
+    input {
+        font-family: 'Oswald', Arial, sans-serif;
+        font-size: 18px;
+        margin: 0 0 0 8px;
+        color: #444;
+        &::-webkit-input-placeholder {
+            opacity: 1 !important;
+            color: #444;
+        }
+    }
+    img {
+        position: absolute;
+        left: 8px;
+        top: 10px;
+        width: 20px;
+        height: 21px;
+        z-index: 2;
+        margin: 0px;
+        opacity: 0.5;
+    }
+}
