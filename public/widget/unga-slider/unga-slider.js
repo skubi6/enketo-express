@@ -10,7 +10,7 @@ define( function( require, exports, module ) {
     var $ = require( 'jquery' );
     var pluginName = 'ungaSlider';
 
-    require( 'bootstrap-slider-basic' );
+    require( '../../../node_modules/enketo-core/node_modules/bootstrap-slider-basic' );
 
     /**
      * @constructor
