@@ -7,8 +7,17 @@
 
 // override ../grid/main here
 
+// allow .note.or-appearance-header to stretch to full width of screen
 .main {
     max-width: inherit;
+}
+
+// correct other question types
+// This likely has all kinds of negative consequences if we ever turn it into a general theme.
+.question, .note:not(.or-appearance-header), .or-group, .or-group-data {
+    max-width: 1100px;
+    margin-left: auto !important;
+    margin-right: auto !important;
 }
 
 .question {
