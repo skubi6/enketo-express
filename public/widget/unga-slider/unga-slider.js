@@ -37,7 +37,7 @@ define( function( require, exports, module ) {
         $( this.element ).slider( {
             reversed: false,
             min: 1,
-            max: 7,
+            max: 5,
             orientation: 'horizontal',
             step: 1,
             value: value
@@ -81,6 +81,6 @@ define( function( require, exports, module ) {
 
     module.exports = {
         'name': pluginName,
-        'selector': '.or-appearance-unga-slider-7 input[type="number"]'
+        'selector': '.or-appearance-unga-slider-5 input[type="number"]'
     };
 } );
