@@ -56,10 +56,12 @@ function uploadRecord( record ) {
         return Promise.reject( e );
     }
 
-    batches.forEach( function( batch ) {
+    batches.forEach( function( batch, index ) {
         batch.formData.append( 'Date', new Date().toUTCString() );
         batch.instanceId = record.instanceId;
         batch.deprecatedId = record.deprecatedId;
+        batch.batchTotal = batches.length;
+        batch.batchIndex = index;
     } );
 
     // Perform batch uploads sequentially for to avoid issues when connections are very poor and 
@@ -117,7 +119,9 @@ function _uploadBatch( recordBatch ) {
                 headers: {
                     'X-OpenRosa-Version': '1.0',
                     'X-OpenRosa-Deprecated-Id': recordBatch.deprecatedId,
-                    'X-OpenRosa-Instance-Id': recordBatch.instanceId
+                    'X-OpenRosa-Instance-Id': recordBatch.instanceId,
+                    'X-Enketo-Batch-Index': recordBatch.batchIndex,
+                    'X-Enketo-Batch-Total': recordBatch.batchTotal,
                 },
                 timeout: 300 * 1000
             } )
