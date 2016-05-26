@@ -1,0 +1,117 @@
+@import "widgets";
+@import "../../../../../node_modules/enketo-core/src/sass/formhub/form-controls";
+@import "../../../../../node_modules/enketo-core/src/sass/grid/main";
+@import "../../../../../node_modules/enketo-core/src/sass/core/slider";
+@import "form_header";
+@import "form_footer";
+
+// override ../grid/main here
+
+// allow .note.or-appearance-header to stretch to full width of screen
+.main {
+    max-width: inherit;
+}
+
+// correct other question types
+// This likely has all kinds of negative consequences if we ever turn it into a general theme.
+.question, .note:not(.or-appearance-header), .or-group, .or-group-data {
+    max-width: 1100px;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.question {
+    font-family: 'Oswald', Arial, sans-serif;
+    padding-bottom: 60px;
+    &:not(.note):not(.focus):hover {
+        background-color: transparent;
+    }
+}
+
+.option-wrapper > label,
+button.btn,
+h2, h3, h4, p,
+.vex.vex-theme-plain .vex-content {
+    font-family: 'Oswald', Arial, sans-serif;
+}
+
+.question .question-label,
+.note .question-label {
+    text-transform: none;
+    text-align: center;
+    font-size: 25px;
+    font-weight: 300;
+    line-height: 1.35em;
+}
+
+.or-hint.active {
+    font-family: 'Oswald', Arial, sans-serif;
+    font-size: 18px;
+    margin-top: 13px;
+    font-style: normal;
+    font-weight: bold;
+    padding-bottom: 10px;
+    color: #aaaaaa;
+}
+
+legend {
+    text-align: center;
+    width: 80%;
+    margin: 0 auto;
+    margin-bottom: 20px;
+}
+
+span.required {
+    display: none;
+}
+
+.note {
+    font-family: 'Oswald', Arial, sans-serif;
+    background: transparent;
+    border: none;
+}
+
+h2 {
+    font-family: 'Oswald', Arial, sans-serif;
+    font-weight: 600;
+    padding-top: 30px;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+section.or-appearance-narrow {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.btn-primary {
+    background-color: #68A5DE;
+    border: none;
+    border-bottom: 2px solid darken(#68a5de, 10%);
+    border-radius: 4px;
+    font-size: 20px;
+    text-transform: uppercase;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    transition: all 0.5s;
+    &:hover, &:focus, &:active, &.active {
+        background-color: darken(#68a5de, 10%);
+        border: none;
+        border-bottom: 2px solid darken(#68a5de, 20%);
+    }
+}
+
+// Error messages
+
+.invalid-required, .invalid-constraint {
+    &:not(.note):not(.focus):not(.or-appearance-unga-collapse):hover {
+        background: $state-danger-bg;
+    }
+}
+
+.invalid-constraint .or-constraint-msg.active,
+.invalid-required .or-required-msg.active {
+    font-family: 'Oswald', Arial, sans-serif;
+    text-align: center;
+    font-weight: normal;
+}

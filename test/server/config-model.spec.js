@@ -9,7 +9,7 @@ var expect = chai.expect;
 var config = require( '../../app/models/config-model' );
 
 describe( 'Config Model', function() {
-    var themes = [ 'formhub', 'grid', 'kobo', 'plain' ];
+    var themes = [ 'formhub', 'grid', 'kobo', 'plain', 'unga-grid' ];
 
     it( 'should return default list of themes', function() {
         expect( config.getThemesSupported() ).to.deep.equal( themes );

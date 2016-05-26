@@ -1,0 +1,145 @@
+.question.or-appearance-unga-collapse,
+.touch .question.or-appearance-unga-collapse {
+    .option-label.active {
+        .icon {
+            @extend .fa, .fa-angle-right, .fa-fw;
+        }
+        + .collapsible {
+            display: none;
+        }
+        &.open {
+            .icon {
+                @extend .fa, .fa-angle-down, .fa-fw;
+            }
+            + .collapsible {
+                display: block;
+            }
+        }
+    }
+    .sub-option-label {
+        display: none;
+    }
+    .btn-collapse {
+        font-size: 28px;
+    }
+    .option-wrapper {
+        label {
+            padding: 20px;
+            padding-left: 140px !important;
+            padding-right: 90px !important;
+            position: relative;
+            min-height: 110px;
+            margin-bottom: 5px;
+            background-color: #F3F3F3;
+            border-bottom: none;
+            transition: all 0.5s;
+            overflow: hidden;
+            &:hover {
+                background-color: #DDD;
+                border-bottom-color: #DDD;
+            }
+            img {
+                float: none;
+                width: 110px;
+                height: 251px;
+                // note: image dimensions must maintain image proportions
+                position: absolute;
+                top: -2px;
+                left: 0px;
+                z-index: 10;
+                margin: 0px;
+            }
+            input[type=checkbox] ~ .option-label::before {
+                font-family: 'FontAwesome';
+                @extend .fa, .fa-fw;
+                @extend .fa-check-circle;
+                content: '\f058' !important;
+                font-size: 48px !important;
+                transition: all 0.5s;
+            }
+            input[type=checkbox]:not(:checked) ~ .option-label::before {
+                color: #FFF;
+            }
+            input[type=checkbox]:checked ~ .option-label::before {
+                color: #585858;
+            }
+        }
+        .option-label.active {
+            font-size: 25px;
+            font-weight: 600;
+            display: inline-block;
+            margin-top: 20px;
+            opacity: 0.8;
+            &:before {
+                position: absolute;
+                right: 16px;
+                top: 50%;
+                margin-top: -24px;
+                font-size: 25px;
+            }
+        }
+        .sub-option-label.active {
+            display: inline;
+            padding: 10px 0px;
+            font-size: 17px;
+        }
+    }
+}
+
+.invalid-required.question.or-appearance-unga-collapse,
+.invalid-constraint.question.or-appearance-unga-collapse {
+    background: transparent !important;
+    label, label:hover {
+        background-color: #f2dede;
+        border-color: darken(#f2dede, 10%);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .question.or-appearance-unga-collapse .option-wrapper,
+    .touch .question.or-appearance-unga-collapse .option-wrapper {
+        label {
+            padding-left: 130px !important;
+            padding-right: 70px !important;
+        }
+        .option-label {
+            font-size: 20px;
+        }
+        input[type=checkbox] ~ .option-label::before {
+            right: 0px;
+        }
+        .sub-option-label {
+            padding-bottom: 0px;
+        }
+    }
+}
+
+@media screen and (max-width: 540px) {
+    .question.or-appearance-unga-collapse .option-wrapper,
+    .touch .question.or-appearance-unga-collapse .option-wrapper {
+        min-height: 90px;
+        label {
+            padding-left: 115px !important;
+            padding-right: 50px !important;
+        }
+        label img {
+            top: -5px;
+            width: 100px;
+            height: 228px;
+        }
+        label input[type=checkbox] ~ .option-label::before {
+            font-size: 32px !important;
+        }
+        label .option-label {
+            font-size: 16px;
+            line-height: 20px;
+            margin-top: 10px;
+            &:before {
+                right: 8px;
+            }
+        }
+        .sub-option-label {
+            font-size: 14px;
+        }
+    }
+}

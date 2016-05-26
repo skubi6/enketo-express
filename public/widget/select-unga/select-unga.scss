@@ -1,0 +1,58 @@
+.simple-select.or-appearance-unga, 
+.touch .question.simple-select.or-appearance-unga {
+    .option-wrapper {
+    	display: block; 
+        text-align: center;
+    }
+    .option-wrapper > label {
+    	width:25%;
+    	border:2px solid #6BA6DB !important;
+    	display: inline-block;
+    	flex:0;
+    	font-size: 32px;
+    	border-top-left-radius: 25px  !important;
+    	border-bottom-left-radius: 25px  !important;
+    	&.filler {
+    		display: none;
+    	}
+    	span.option-label {
+    			padding:12px;
+    			padding-left: 24px;
+    			position: relative;
+                text-align: center;
+			}
+
+			input[type=radio] ~ .option-label::before {
+					width:45px !important;
+					height:45px !important;
+					border-radius:23px;
+					position:absolute;
+					left: 0px;
+					top: 0px;
+					content:' ' !important; 
+					transition:all 0.5s;
+					z-index: 10;
+			}
+
+      input[type=radio]:not(:checked) ~ .option-label::before {
+					border:2px solid #6BA6DB !important;
+					background:transparent  !important;
+      }
+
+      input[type=radio]:checked ~ .option-label::before { 
+					border:2px solid #6BA6DB  !important;
+					background:#6BA6DB  !important;
+      }
+
+    }
+}
+
+@media screen and (max-width: 479px) {
+    .simple-select.or-appearance-unga, 
+    .touch .question.simple-select.or-appearance-unga {
+        .option-wrapper > label {
+            width:45%;
+            font-size: 24px;
+        }
+    }
+}
