@@ -1,0 +1,385 @@
+@import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600&subset=latin,latin-ext);
+
+$primaryColor: #3f2687;
+
+// Limited to forms with this class
+.mw-women, .touch .mw-women {
+  font-family: 'Open Sans';
+  font-weight: 400;
+  .question {
+    font-family: 'Open Sans';
+    font-weight: 400;
+    padding-bottom: 30px;
+    input[type=text] {
+      border: 1px solid lighten($primaryColor, 40%);
+      width: 80%;
+      max-width: 600px;
+      align-self: center;
+      margin-top: 15px;
+      padding: 0px 8px;
+      font-family: 'Open Sans';
+      font-weight: 600;
+      color: $primaryColor;
+    }
+  }
+  .question.focus,
+  .note.focus {
+    background-color: transparent;
+  }
+  .question-label {
+    text-align: center;
+    font-family: 'Open Sans';
+    font-weight: 400;
+    font-size: 24px;
+    opacity: 1;
+    padding-right: 0px;
+    padding-top: 0px;
+    width: 80%;
+    margin: 0 auto;
+    p {
+      font-family: 'Open Sans';
+      font-weight: 400;
+      font-size: 24px;
+      color: $primaryColor;
+      margin-bottom: 0px;
+    }
+  }
+  .or-hint.active {
+    font-family: 'Open Sans';
+    font-weight: 300;
+    font-size: 24px;
+    text-align: center;
+  }
+  .invalid-constraint .or-constraint-msg.active,
+  .invalid-required .or-required-msg.active {
+    font-family: 'Open Sans';
+    font-weight: 600;
+    font-size: 20px;
+  }
+  .invalid-constraint, .invalid-required,
+  .invalid-required.question.or-appearance-unga-collapse,
+  .invalid-constraint.question.or-appearance-unga-collapse {
+    background-color: #f2dede !important;
+  }
+  label.note.non-select.or-appearance-header {
+    background-image: url("https://dl.dropboxusercontent.com/u/1042893/wee-bg.jpg") !important;
+    height: 640px;
+    background-size: cover;
+    position: relative;
+    margin-bottom: 80px;
+    &:after {
+      position: absolute;
+      content: '';
+      width: 400px;
+      height: 250px;
+      top: 30px;
+      left: 50%;
+      margin-left: -200px;
+      background-image: url("https://dl.dropboxusercontent.com/u/1042893/wee-logo.png");
+      background-repeat: no-repeat;
+      background-size: contain;
+    }
+  }
+  > .or-appearance-header .question-label {
+    width: 800px;
+    margin-left: -400px;
+    font-size: 24px;
+    border: none;
+    background-color: #e5d2dc;
+    border-radius: 20px;
+    text-align: left;
+    font-family: 'Open Sans';
+    font-weight: 300;
+    top: 315px;
+    padding: 15px 20px;
+    padding-right: 30px;
+    color: $primaryColor;
+    &:after {
+      display: none;
+    }
+    &:hover {
+      opacity: 1;
+    }
+    a {
+      color: white;
+      background-color: #cba1bb;
+      text-transform: uppercase;
+      text-decoration: none;
+      display: inline-block;
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 18px;
+      &:hover {
+        opacity: 0.6;
+      }
+    }
+    p {
+      line-height: 1.25em;
+      margin: 0px;
+      margin-bottom: 0.8em;
+      font-family: 'Open Sans';
+      font-weight: 400;
+      em {
+        font-style: normal;
+        font-weight: 600;
+      }
+    }
+  }
+  > .or-appearance-header .btn-scroll-to-first {
+    background-color: transparent;
+    border: none;
+    border-radius: 0px;
+    height: 64px;
+    color: $primaryColor;
+    font-size: 32px;
+    top: auto;
+    bottom: 0px;
+    i.fa-chevron-down:before {
+      // override
+      content: "\f175" !important;
+    }
+    &:hover {
+      background-color: transparent;
+      border: none;
+      color: lighten($primaryColor, 30%);
+    }
+  }
+  .simple-select.or-appearance-unga,
+  .touch .question.simple-select.or-appearance-unga {
+    .option-wrapper > label {
+      width: 160px;
+      border: none !important;
+      border-radius: 0 !important;
+      margin: 0 auto;
+      margin-bottom: 15px;
+      margin-right: auto !important;
+      display: block;
+      padding: 0px;
+      font-family: 'Open Sans';
+      font-weight: 400;
+      &:hover {
+        background-color: transparent !important;
+      }
+      &.filler {
+        display: none;
+      }
+      span.option-label.active {
+        padding: 12px;
+        position: relative;
+        text-align: center;
+        display: block;
+        border-radius: 20px;
+        margin: 0px;
+        text-transform: uppercase;
+        color: $primaryColor;
+        font-size: 24px;
+        font-weight: normal;
+        border: 1px solid $primaryColor !important;
+      }
+      .option-label::before {
+        display: none;
+      }
+      input[type=radio]:checked ~ .option-label {
+        background: $primaryColor;
+        color: #FFF;
+      }
+    }
+  }
+  .question.or-appearance-unga-collapse,
+  .touch .question.or-appearance-unga-collapse {
+    .option-wrapper {
+      max-width: 500px;
+      margin: 0 auto;
+      label {
+        padding: 0px !important;
+        min-height: 0px;
+        margin-bottom: 10px;
+        background-color: transparent;
+        border: none !important;
+        border-radius: 0px;
+        transition: all 0.5s;
+        width: 100%;
+        display: block;
+      }
+      .option-label.active {
+        font-weight: normal;
+        margin-top: 0px;
+        font-family: 'Open Sans';
+        font-weight: 400;
+        font-size: 18px;
+        border-radius: 10px;
+        opacity: 1;
+        background-color: #FFF;
+        color: $primaryColor;
+        border: 1px solid $primaryColor;
+        display: block;
+        padding: 8px 16px;
+        padding-left: 48px;
+        &:hover {
+          background-color: $primaryColor;
+          color: #FFF;
+        }
+        &:before {
+          display: none;
+        }
+        &:after {
+          content: '';
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          background: #c0b5ca;
+          left: 14px;
+          top: 7px;
+          position: absolute;
+        }
+        .btn-collapse {
+          display: none;
+        }
+      }
+      input:checked ~ .option-label.active {
+        background-color: $primaryColor;
+        color: #FFF;
+      }
+      // colors of circles
+      label:nth-child(2n) .option-label.active:after {
+        background-color: #f5c47e;
+      }
+      label:nth-child(3n) .option-label.active:after {
+        background-color: #836a98;
+      }
+      label:nth-child(4n) .option-label.active:after {
+        background-color: #d72975;
+      }
+      label:nth-child(5n) .option-label.active:after {
+        background-color: #efa94a;
+      }
+      label:nth-child(6n) .option-label.active:after {
+        background-color: #e896ad;
+      }
+      label:nth-child(7n) .option-label.active:after {
+        background-color: #fadfb5;
+      }
+    }
+  }
+  .question.or-appearance-unga-slider-5 {
+    height: auto;
+    max-width: 1100px;
+    padding-left: 0px !important;
+    padding-bottom: 85px !important;
+    background-color: transparent;
+    margin-bottom: 50px;
+    &:hover {
+      background-color: transparent !important;
+    }
+    .widget.slider-horizontal {
+      width: 80%;
+      margin-left: 10%;
+      margin-right: 10%;
+      right: 0px;
+      bottom: 0px;
+      .slider {
+        height: 36px;
+        width: 96%;
+        margin-left: 2%;
+        margin-right: 2%;
+        .slider-track {
+          background: #a79ec8;
+        }
+        .slider-selection {
+          background: $primaryColor;
+          opacity: 0.6;
+        }
+        .slider-handle {
+          background: $primaryColor;
+          width: 30px;
+          height: 30px;
+          margin-top: -10px;
+          margin-left: -15px;
+        }
+      }
+      i {
+        font-size: 32px;
+        opacity: 0.3;
+      }
+    }
+  }
+  h2 {
+    font-family: 'Open Sans';
+    font-weight: 600;
+    color: $primaryColor;
+    opacity: 0.4;
+  }
+  .question.or-appearance-unga-placeholder-minimal,
+  .question.or-appearance-unga-placeholder {
+    background-color: white;
+    border: 1px solid $primaryColor;
+    border-radius: 15px;
+    padding-left: 0px !important;
+    width: calc(100% - 13px) !important;
+    padding-bottom: 3px !important;
+    img {
+      display: none;
+    }
+    select, input {
+      font-family: 'Open Sans';
+      font-weight: 600;
+      color: $primaryColor;
+    }
+    input {
+      border: none;
+      width: 100%;
+      min-width: 100%;
+      margin: 0px !important;
+      padding: 0px 8px;
+    }
+    &.invalid-constraint .or-constraint-msg.active,
+    &.invalid-required .or-required-msg.active {
+      font-size: 16px;
+    }
+  }
+  input::-webkit-input-placeholder {
+    font-family: 'Open Sans';
+    font-weight: 600;
+    color: $primaryColor;
+  }
+  input::-moz-placeholder {
+    font-family: 'Open Sans';
+    font-weight: 600;
+    color: $primaryColor;
+  }
+  input::-ms-input-placeholder {
+    font-family: 'Open Sans';
+    font-weight: 600;
+    color: $primaryColor;
+  }
+}
+
+#myworld-women + .form-footer {
+  .btn-primary {
+    background-color: #8e2c8b;
+    border-bottom-color: $primaryColor;
+    font-family: 'Open Sans';
+    font-weight: 600;
+    border-radius: 15px;
+    i {
+      display: none;
+    }
+  }
+  .btn-primary:hover,
+  .btn-primary:focus,
+  .btn-primary:active,
+  .btn-primary.active {
+    background-color: $primaryColor;
+    border-bottom-color: $primaryColor;
+  }
+}
+
+// iPad overrides
+@media screen and (max-width: 780px) {
+  .touch .mw-women {
+    > .or-appearance-header .question-label {
+      width: 700px;
+      margin-left: -350px;
+    }
+  }
+}
