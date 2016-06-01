@@ -36,6 +36,7 @@ $primaryColor: #3f2687;
     padding-top: 0px;
     width: 80%;
     margin: 0 auto;
+    position: relative;
     p {
       font-family: 'Open Sans';
       font-weight: 400;
@@ -63,7 +64,7 @@ $primaryColor: #3f2687;
   }
   label.note.non-select.or-appearance-header {
     background-image: url("https://dl.dropboxusercontent.com/u/1042893/wee-bg.jpg") !important;
-    height: 640px;
+    height: 680px;
     background-size: cover;
     position: relative;
     margin-bottom: 80px;
@@ -116,13 +117,31 @@ $primaryColor: #3f2687;
     p {
       line-height: 1.25em;
       margin: 0px;
-      margin-bottom: 0.8em;
+      margin-bottom: 0.75em;
       font-family: 'Open Sans';
       font-weight: 400;
+      font-size: 20px;
       em {
         font-style: normal;
         font-weight: 600;
       }
+    }
+    span {
+      position: absolute;
+      bottom: -60px;
+      height: 40px;
+      line-height: 34px;
+      width: 230px;
+      text-align: center;
+      left: 50%;
+      margin-left: -115px;
+      font-weight: 600;
+      font-size: 24px;
+      color: white;
+      background-color: $primaryColor;
+      border-radius: 12px;
+      padding: 4px;
+      text-transform: uppercase;
     }
   }
   > .or-appearance-header .btn-scroll-to-first {
@@ -133,7 +152,8 @@ $primaryColor: #3f2687;
     color: $primaryColor;
     font-size: 32px;
     top: auto;
-    bottom: 0px;
+    bottom: 10px;
+    margin-left: -16px;
     i.fa-chevron-down:before {
       // override
       content: "\f175" !important;
@@ -144,8 +164,7 @@ $primaryColor: #3f2687;
       color: lighten($primaryColor, 30%);
     }
   }
-  .simple-select.or-appearance-unga,
-  .touch .question.simple-select.or-appearance-unga {
+  .question.simple-select.or-appearance-unga {
     .option-wrapper > label {
       width: 160px;
       border: none !important;
@@ -185,8 +204,7 @@ $primaryColor: #3f2687;
       }
     }
   }
-  .question.or-appearance-unga-collapse,
-  .touch .question.or-appearance-unga-collapse {
+  .question.or-appearance-unga-collapse {
     .option-wrapper {
       max-width: 500px;
       margin: 0 auto;
@@ -302,6 +320,10 @@ $primaryColor: #3f2687;
         opacity: 0.3;
       }
     }
+    .or-required-msg.active {
+      position: relative;
+      width: auto;
+    }
   }
   h2 {
     font-family: 'Open Sans';
@@ -309,48 +331,67 @@ $primaryColor: #3f2687;
     color: $primaryColor;
     opacity: 0.4;
   }
-  .question.or-appearance-unga-placeholder-minimal,
-  .question.or-appearance-unga-placeholder {
-    background-color: white;
-    border: 1px solid $primaryColor;
-    border-radius: 15px;
-    padding-left: 0px !important;
-    width: calc(100% - 13px) !important;
-    padding-bottom: 3px !important;
-    img {
-      display: none;
+  .or-appearance-unga-text-other.or-appearance-unga-placeholder {
+    background-color: transparent;
+    margin: 0 auto !important;
+    padding-left: 0px;
+    margin-top: -30px !important;
+    max-width: 500px;
+    input {
+      margin-top: 5px;
+      margin-bottom: 30px;
     }
-    select, input {
+    &:hover {
+      background-color: transparent !important;
+    }
+    .or-hint.active {
+      font-size: 16px;
+    }
+  }
+  .or-appearance-narrow {
+    .question.or-appearance-unga-placeholder-minimal,
+    .question.or-appearance-unga-placeholder {
+      background-color: white;
+      border: 1px solid $primaryColor;
+      border-radius: 15px;
+      padding-left: 0px !important;
+      width: calc(100% - 13px) !important;
+      padding-bottom: 3px !important;
+      img {
+        display: none;
+      }
+      select, input {
+        font-family: 'Open Sans';
+        font-weight: 600;
+        color: $primaryColor;
+      }
+      input {
+        border: none;
+        width: 100%;
+        min-width: 100%;
+        margin: 0px !important;
+        padding: 0px 8px;
+      }
+      &.invalid-constraint .or-constraint-msg.active,
+      &.invalid-required .or-required-msg.active {
+        font-size: 16px;
+      }
+    }
+    input::-webkit-input-placeholder {
       font-family: 'Open Sans';
       font-weight: 600;
       color: $primaryColor;
     }
-    input {
-      border: none;
-      width: 100%;
-      min-width: 100%;
-      margin: 0px !important;
-      padding: 0px 8px;
+    input::-moz-placeholder {
+      font-family: 'Open Sans';
+      font-weight: 600;
+      color: $primaryColor;
     }
-    &.invalid-constraint .or-constraint-msg.active,
-    &.invalid-required .or-required-msg.active {
-      font-size: 16px;
+    input::-ms-input-placeholder {
+      font-family: 'Open Sans';
+      font-weight: 600;
+      color: $primaryColor;
     }
-  }
-  input::-webkit-input-placeholder {
-    font-family: 'Open Sans';
-    font-weight: 600;
-    color: $primaryColor;
-  }
-  input::-moz-placeholder {
-    font-family: 'Open Sans';
-    font-weight: 600;
-    color: $primaryColor;
-  }
-  input::-ms-input-placeholder {
-    font-family: 'Open Sans';
-    font-weight: 600;
-    color: $primaryColor;
   }
 }
 
@@ -388,9 +429,9 @@ $primaryColor: #3f2687;
 @media screen and (max-width: 450px) {
   .mw-women, .touch .mw-women {
     label.note.non-select.or-appearance-header:after {
-      width: 300px;
+      width: 290px;
       height: 220px;
-      margin-left: -150px;
+      margin-left: -145px;
       top: 60px;
     }
     > .or-appearance-header .question-label {
