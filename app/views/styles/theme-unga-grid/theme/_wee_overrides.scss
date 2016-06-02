@@ -95,6 +95,7 @@ $primaryColor: #3f2687;
     padding: 15px 20px;
     padding-right: 30px;
     color: $primaryColor;
+    cursor: auto;
     &:after {
       display: none;
     }
@@ -141,6 +142,7 @@ $primaryColor: #3f2687;
       border-radius: 12px;
       padding: 5px;
       text-transform: uppercase;
+      cursor: pointer;
     }
   }
   > .or-appearance-header .btn-scroll-to-first {
@@ -153,8 +155,9 @@ $primaryColor: #3f2687;
     top: auto;
     bottom: 10px;
     margin-left: -16px;
+    cursor: pointer;
     i.fa-chevron-down:before {
-      // override
+      // override FA ICON
       content: "\f175" !important;
     }
     &:hover {
@@ -353,7 +356,8 @@ $primaryColor: #3f2687;
     margin: 0 auto !important;
     padding-left: 0px;
     margin-top: -30px !important;
-    max-width: 500px;
+    width: 75%;
+    max-width: 600px;
     input {
       margin-top: 5px;
       margin-bottom: 30px;
@@ -429,7 +433,7 @@ $primaryColor: #3f2687;
 .mw-women + .form-footer {
   .btn-primary {
     background-color: #8e2c8b;
-    border-bottom-color: $primaryColor;
+    border-bottom-color: #8e2c8b;
     font-family: 'Open Sans';
     font-weight: 600;
     border-radius: 15px;

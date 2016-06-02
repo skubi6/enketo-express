@@ -53,7 +53,11 @@ define( function( require, exports, module ) {
     };
 
     Header.prototype._setScrollHandler = function() {
-        this.$scrollButton.add( this.$formTitles ).on( 'click', function() {
+        if (this.$formTitles.find('span') || this.$formTitles.find('a'))
+            var $els = this.$formTitles.find('span');
+        else 
+            var $els = this.$formTitles;
+        this.$scrollButton.add( $els ).on( 'click', function() {
             if ( window.scrollTo ) {
                 var firstTop = $( '.question' ).eq( 0 ).offset().top;
                 window.scrollTo( 0, firstTop - 20 );

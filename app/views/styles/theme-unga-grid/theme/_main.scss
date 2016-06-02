@@ -12,6 +12,10 @@
   max-width: inherit;
 }
 
+.or, .or-group, .or-group-data, .or-repeat {
+  flex-direction: column;
+}
+
 // correct other question types
 // This likely has all kinds of negative consequences if we ever turn it into a general theme.
 .question, .note:not(.or-appearance-header), .or-group, .or-group-data {
