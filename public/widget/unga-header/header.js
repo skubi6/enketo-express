@@ -49,8 +49,8 @@ define( function( require, exports, module ) {
 
         $el.append( this.$scrollButton );
 
-        if (this.$formTitles.find('span')) {
-            this.$elsClick = this.$formTitles.find('span');
+        if ( this.$formTitles.find( 'span' ) ) {
+            this.$elsClick = this.$formTitles.find( 'span' );
         } else {
             this.$elsClick = this.$formTitles;
         }
