@@ -49,15 +49,17 @@ define( function( require, exports, module ) {
 
         $el.append( this.$scrollButton );
 
+        if (this.$formTitles.find('span')) {
+            this.$elsClick = this.$formTitles.find('span');
+        } else {
+            this.$elsClick = this.$formTitles;
+        }
+
         this._setScrollHandler();
     };
 
     Header.prototype._setScrollHandler = function() {
-        if (this.$formTitles.find('span') || this.$formTitles.find('a'))
-            var $els = this.$formTitles.find('span');
-        else 
-            var $els = this.$formTitles;
-        this.$scrollButton.add( $els ).on( 'click', function() {
+        this.$scrollButton.add( this.$elsClick ).on( 'click', function() {
             if ( window.scrollTo ) {
                 var firstTop = $( '.question' ).eq( 0 ).offset().top;
                 window.scrollTo( 0, firstTop - 20 );

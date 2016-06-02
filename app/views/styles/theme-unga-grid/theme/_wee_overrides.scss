@@ -461,7 +461,7 @@ $primaryColor: #3f2687;
 }
 
 // iPad overrides
-@media screen and (max-width: 450px) {
+@media screen and (max-width: 767px) {
   .mw-women, .touch .mw-women {
     label.note.non-select.or-appearance-header:after {
       width: 290px;
