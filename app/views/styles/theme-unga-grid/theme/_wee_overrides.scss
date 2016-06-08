@@ -6,7 +6,7 @@
   flex-wrap: nowrap;
 }
 
-$primaryColor: #3f2687;
+$primaryColor: #592684;
 
 // Limited to forms with this class
 .mw-women, .touch .mw-women {
@@ -70,7 +70,7 @@ $primaryColor: #3f2687;
     background-color: #f2dede !important;
   }
   label.note.non-select.or-appearance-header {
-    background-image: url("https://dl.dropboxusercontent.com/u/1042893/wee-bg.jpg") !important;
+    background-image: url("/images/wee-bg.jpg") !important;
     height: 680px;
     background-size: cover;
     position: relative;
@@ -83,7 +83,7 @@ $primaryColor: #3f2687;
       top: 30px;
       left: 50%;
       margin-left: -200px;
-      background-image: url("https://dl.dropboxusercontent.com/u/1042893/wee-logo.png");
+      background-image: url("/images/logo-wee.png");
       background-repeat: no-repeat;
       background-size: contain;
     }
@@ -494,7 +494,7 @@ $primaryColor: #3f2687;
   }
 }
 
-// iPad overrides
+// iphone overrides
 @media screen and (max-width: 767px) {
   .mw-women, .touch .mw-women {
     label.note.non-select.or-appearance-header:after {
