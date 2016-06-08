@@ -49,6 +49,7 @@ define( function( require, exports, module ) {
     };
 
     UngaSlider.prototype._renderSmileys = function() {
+        this.$widget.append( '<div class="notches"><span class="n1"></span><span class="n2"></span><span class="n3"></span><span class="n4"></span><span class="n5"></span></div>');
         this.$widget.append( '<div class="sad"><i class="fa fa-fw fa-frown-o"></i></div>' );
         this.$widget.append( '<div class="neutral"><i class="fa fa-fw fa-meh-o"></i></div>' );
         this.$widget.append( '<div class="happy"><i class="fa fa-fw fa-smile-o"></i></div>' );
