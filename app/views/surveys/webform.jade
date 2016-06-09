@@ -22,11 +22,19 @@ block content
           .form__loader__image
       include component/_form-footer
   section.unga-footer(style="display:none")
-    img.myo(src="/images/logo-myo.png")
-    a(href="http://kobotoolbox.org/", target="_blank") 
-      img.kobo(src="/images/logo-kobo.png")
-    a(href="https://enketo.org", target="_blank")
-      img.enketo(src="/images/logo-enketo.png")
+    .logos
+      .logo-myo
+        img.myo(src="/images/logo-myo.png")
+      .logo-sdg
+        img.sdg(src="/images/logo-sdg.png")
+      .logo-wee
+        img.wee(src="/images/logo-wee.png")
+    .powered-by
+      .powered-by-text Powered by
+      a(href="http://kobotoolbox.org/", target="_blank") 
+        img.kobo(src="/images/logo-kobo.png")
+      a(href="https://enketo.org", target="_blank")(style="display:none")
+        img.enketo(src="/images/logo-enketo.png")
 
   if manifest
     include component/_side-slider

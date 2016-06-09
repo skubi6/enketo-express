@@ -5,14 +5,32 @@
   padding-top: 60px;
   padding-bottom: 60px;
   text-align: center;
-  background-color: #89A9CB;
-  .myo {
-    display: block;
-    max-width: 280px;
+  background-color: #e6d1dc;
+  .logos {
+    text-align: center;
     margin: 0 auto;
-  }
-  .myo {
+    max-width: 800px;
+    width: 90%;
     margin-bottom: 40px;
+    vertical-align: middle;
+    > div {
+      display: inline-block;
+      text-align: center;
+      width: 33.3%;
+      height: 120px;
+      line-height: 120px;
+      img {
+        display: inline-block;
+        max-width: 90%;
+        max-height: 95%;
+        &.sdg {
+          margin: 0 15px;
+        }
+        &.wee, &.myo {
+          max-height: 65%;
+        }
+      }
+    }
   }
   .kobo, .enketo {
     max-width: 140px;
@@ -32,4 +50,14 @@
 
 .enketo-power {
   display: none;
+}
+
+@media screen and (max-width: 767px) {
+  .unga-footer {
+    .logos > div {
+      display: block;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+  }
 }
