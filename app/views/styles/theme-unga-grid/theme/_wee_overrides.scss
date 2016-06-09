@@ -68,6 +68,7 @@ $primaryColor: #592684;
   .invalid-required.question.or-appearance-unga-collapse,
   .invalid-constraint.question.or-appearance-unga-collapse {
     background-color: #f2dede !important;
+    padding-bottom: 45px;
   }
   label.note.non-select.or-appearance-header {
     background-image: url("/images/wee-bg.jpg") !important;
@@ -279,6 +280,10 @@ $primaryColor: #592684;
         background-color: #fadfb5;
       }
     }
+    .or-constraint-msg.active {
+      font-size: 15px;
+      line-height: 1em;
+    }
   }
   .question.or-appearance-unga-slider-5 {
     height: auto;
@@ -388,6 +393,9 @@ $primaryColor: #592684;
     .or-hint.active {
       font-size: 16px;
     }
+  }
+  .or-appearance-unga-collapse.invalid-constraint + .or-appearance-unga-text-other.or-appearance-unga-placeholder {
+    margin-top: -50px !important;
   }
   .or-appearance-unga-text-big {
     display: block;
