@@ -1,11 +1,5 @@
 @import url(https://fonts.googleapis.com/css?family=Open+Sans:300,400,600&subset=latin,latin-ext);
 
-// IE11 layout fixes (should not affect other browsers)
-.main, .paper, .or {
-  flex: 0 1 auto;
-  flex-wrap: nowrap;
-}
-
 $primaryColor: #592684;
 
 // Limited to forms with this class
@@ -292,13 +286,14 @@ $primaryColor: #592684;
     padding-bottom: 85px !important;
     background-color: transparent;
     margin-bottom: 80px;
+    width: 80%;
     &:hover {
       background-color: transparent !important;
     }
     .widget.slider-horizontal {
-      width: 80%;
-      margin-left: 10%;
-      margin-right: 10%;
+      width: 90%;
+      margin-left: 5%;
+      margin-right: 5%;
       right: 0px;
       bottom: 0px;
       .slider {
@@ -355,9 +350,9 @@ $primaryColor: #592684;
       display: block;
       padding-top: 10px;
       position: relative;
-      width: 80%;
-      margin-left: 10%;
-      margin-right: 10%;
+      width: 94%;
+      margin-left: 3%;
+      margin-right: 3%;
       text-align: left;
       font-size: 18px;
       > span:last-child {

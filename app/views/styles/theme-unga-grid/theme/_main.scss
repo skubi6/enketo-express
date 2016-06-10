@@ -12,13 +12,22 @@
   max-width: inherit;
 }
 
-.or, .or-group, .or-group-data, .or-repeat {
+.or, .or-group, .or-repeat {
   flex-direction: column;
-  .question, .note {
-    flex: 0 auto;
-    // reset previously set flex: 100%; to fix a Firefox bug
- 
-  }
+}
+
+.question, .note {
+  flex: 0 1 auto;
+  // reset previously set flex: 100%; to fix a Firefox bug
+}
+
+.main, .paper, .paper .or, .or-group-data {
+  flex: 0 1 auto;
+}
+
+// IE11 layout fixes (should not affect other browsers)
+.main, .paper, .or {
+  flex-wrap: nowrap;
 }
 
 // correct other question types
@@ -61,6 +70,10 @@ h2, h3, h4, p,
   font-weight: bold;
   padding-bottom: 10px;
   color: #aaaaaa;
+  text-align: center;
+  span {
+    margin-right: 8px;
+  }
 }
 
 legend {
