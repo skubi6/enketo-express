@@ -8,6 +8,7 @@ var $ = require( 'jquery' );
 var init;
 var t;
 var localize;
+var localizeFormContent;
 var htmlParagraphsPostProcessor;
 
 // The postProcessor assumes that array values with line breaks should be divided into HTML paragraphs.
@@ -86,10 +87,23 @@ localize = function( element ) {
     }
 };
 
+/**
+ * Localize form contents (using a trigger select change)
+ * 
+ * @param  {Element} Element [description]
+ */
+
+localizeFormContent = function( something ) {
+    var l = i18next.language;
+    if ($('#form-languages option[value="' + l + '"]').length > 0)
+        $('#form-languages').val(l).trigger('change');
+};
+
 module.exports = {
     init: init,
     t: t,
-    localize: localize
+    localize: localize,
+    localizeFormContent: localizeFormContent
 };
 
 /**

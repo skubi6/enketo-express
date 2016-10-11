@@ -46,6 +46,7 @@ if ( settings.offline ) {
             _setAppCacheEventHandlers();
             appCache.init();
         } )
+        .then( translator.localizeFormContent )
         .catch( _showErrorOrAuthenticate );
 } else {
     console.log( 'App in online-only mode.' );
@@ -57,6 +58,7 @@ if ( settings.offline ) {
         .then( _init )
         .then( connection.getMaximumSubmissionSize )
         .then( _updateMaxSizeSetting )
+        .then( translator.localizeFormContent ) 
         .catch( _showErrorOrAuthenticate );
 }
 
