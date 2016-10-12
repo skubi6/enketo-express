@@ -43,3 +43,21 @@ body {
     background-color: #ffffff;
   }
 }
+
+.or > .or-appearance-headerlinks {
+  position: absolute;
+  z-index: 11;
+  top: 52px;
+  right: 20px;
+  padding:0px;
+  .question-label {
+    color:#DDD;
+    font-size: 13px;
+  }
+  a {
+    color:white;
+    text-decoration: none;
+    font-size: 13px;
+    margin-left: 20px;
+  }
+}
