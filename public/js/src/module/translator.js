@@ -1,10 +1,10 @@
 'use strict';
 
-var settings = require( './settings' );
-var i18next = require( 'i18next' );
-var XHR = require( 'i18next-xhr-backend' );
-var LanguageDetector = require( 'i18next-browser-languagedetector' );
-var $ = require( 'jquery' );
+var settings = require('./settings');
+var i18next = require('i18next');
+var XHR = require('i18next-xhr-backend');
+var LanguageDetector = require('i18next-browser-languagedetector');
+var $ = require('jquery');
 var init;
 var t;
 var localize;
@@ -15,9 +15,9 @@ var htmlParagraphsPostProcessor;
 htmlParagraphsPostProcessor = {
     type: 'postProcessor',
     name: 'htmlParagraphsPostProcessor',
-    process: function( value, key ) {
-        var paragraphs = value.split( '\n' );
-        return ( paragraphs.length > 1 ) ? '<p>' + paragraphs.join( '</p><p>' ) + '</p>' : value;
+    process: function(value, key) {
+        var paragraphs = value.split('\n');
+        return (paragraphs.length > 1) ? '<p>' + paragraphs.join('</p><p>') + '</p>' : value;
     }
 };
 
@@ -27,13 +27,13 @@ htmlParagraphsPostProcessor = {
  * @param  {=*?} something can be anything
  * @return {Promise}       promise resolving the original something argument
  */
-init = function( something ) {
-    return new Promise( function( resolve, reject ) {
+init = function(something) {
+    return new Promise(function(resolve, reject) {
         i18next
-            .use( XHR )
-            .use( LanguageDetector )
-            .use( htmlParagraphsPostProcessor )
-            .init( {
+            .use(XHR)
+            .use(LanguageDetector)
+            .use(htmlParagraphsPostProcessor)
+            .init({
                 whitelist: settings.languagesSupported,
                 fallbackLng: 'en',
                 joinArrays: '\n',
@@ -41,7 +41,7 @@ init = function( something ) {
                     loadPath: settings.basePath + '/locales/__lng__/translation.json',
                 },
                 detection: {
-                    order: [ 'querystring', 'navigator' ],
+                    order: ['querystring', 'navigator'],
                     lookupQuerystring: 'lang',
                     caches: false
                 },
@@ -49,19 +49,19 @@ init = function( something ) {
                     prefix: '__',
                     suffix: '__'
                 },
-                postProcess: [ 'htmlParagraphsPostProcessor' ]
-            }, function( error ) {
-                if ( error ) {
-                    reject( error );
+                postProcess: ['htmlParagraphsPostProcessor']
+            }, function(error) {
+                if (error) {
+                    reject(error);
                 } else {
-                    resolve( something );
+                    resolve(something);
                 }
-            } );
-    } );
+            });
+    });
 };
 
-t = function( key, options ) {
-    return i18next.t( key, options );
+t = function(key, options) {
+    return i18next.t(key, options);
 };
 
 /**
@@ -70,19 +70,19 @@ t = function( key, options ) {
  * 
  * @param  {Element} Element [description]
  */
-localize = function( element ) {
+localize = function(element) {
     var i;
     var cache = {};
-    var list = element.querySelectorAll( '[data-i18n]' );
+    var list = element.querySelectorAll('[data-i18n]');
 
-    for ( i = 0; i < list.length; i++ ) {
-        var el = list[ i ];
+    for (i = 0; i < list.length; i++) {
+        var el = list[i];
         var key = el.dataset.i18n;
-        if ( key ) {
-            if ( !cache[ key ] ) {
-                cache[ key ] = t( key );
+        if (key) {
+            if (!cache[key]) {
+                cache[key] = t(key);
             }
-            el.textContent = cache[ key ];
+            el.textContent = cache[key];
         }
     }
 };
@@ -93,7 +93,7 @@ localize = function( element ) {
  * @param  {Element} Element [description]
  */
 
-localizeFormContent = function( something ) {
+localizeFormContent = function(something) {
     var l = i18next.language;
     if ($('#form-languages option[value="' + l + '"]').length > 0)
         $('#form-languages').val(l).trigger('change');
