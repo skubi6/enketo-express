@@ -43,6 +43,9 @@ define( function( require, exports, module ) {
             value: value
         } );
         this.$widget = $( this.element ).next( '.widget' );
+        if ( ! $( this.element ).val() ) {
+            this.$widget.addClass( 'default-handle-position' );
+        }
         this.$slider = this.$widget.find( '.slider' );
         this._renderSmileys();
         this._setChangeHandler();
@@ -59,6 +62,7 @@ define( function( require, exports, module ) {
         var that = this;
 
         $( this.element ).on( 'slideStop.' + this.namespace, function( slideEvt ) {
+            $( this ).next( '.widget' ).removeClass( 'default-handle-position' );
             $( this ).trigger( 'change' );
         } );
     };

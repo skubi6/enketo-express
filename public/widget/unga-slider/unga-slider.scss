@@ -9,6 +9,7 @@
   align-content: center;
   overflow: hidden;
   margin-bottom: 15px;
+  cursor: initial;
   &:not(.note):not(.focus):hover {
     background-color: #F3F3F3;
   }
@@ -45,12 +46,26 @@
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: space-between;
+    cursor: initial;
     i {
       font-size: 20px;
       opacity: 0.7;
     }
     .slider {
       width: 100%;
+    }
+    .slider-handle {
+      opacity: 0.8;
+      @include gradient-vertical(#6aa6dc, darken(#6aa6dc, 10%));
+      width:24px;
+      height:24px;
+      margin-left: -12px;
+      margin-top:-7px;
+    }
+    &.default-handle-position {
+      .slider-handle {
+        left:50% !important;
+      }
     }
   }
   .slider-track {
@@ -59,10 +74,7 @@
   .slider-selection {
     @include gradient-vertical(lighten(#6aa6dc, 15%), #6aa6dc);
   }
-  .slider-handle {
-    opacity: 0.9;
-    @include gradient-vertical(#6aa6dc, darken(#6aa6dc, 10%));
-  }
+
 }
 
 .invalid-constraint.or-appearance-unga-slider-5,
