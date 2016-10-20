@@ -38,10 +38,6 @@ define( function( require, exports, module ) {
     Header.prototype._swapBackgroundImage = function() {
         var $el = $( this.element );
         var imageUrl = $el.find( 'img.active' ).attr( 'src' ) || $el.find( 'img.active' ).attr( 'data-offline-src' );
-        // var imageOfflineUrl = ;
-        // console.log($el);
-        // console.log(imageUrl);
-        // console.log(imageOfflineUrl)
         $el.css( 'background-image', 'url("' + imageUrl + '")' );
     };
 
