@@ -20,3 +20,16 @@ define( function( require, exports, module ) {
 
     module.exports = widgets;
 } );
+
+// CUSTOM UNGA REDIRECT CODE
+var $ = require( 'jquery' );
+function getQueryStringValue(key) {
+    return unescape(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + escape(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
+}
+var partner = getQueryStringValue("partner");
+$(document).on( "submissionsuccess", function(evt) {
+    if (partner != 'GALOBBY180716') {
+        window.location = "http://data.myworld2030.org/";
+    }
+});
+// END CUSTOM UNGA REDIRECT CODE
