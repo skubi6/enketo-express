@@ -33,7 +33,7 @@ var partner = getQueryStringValue( "partner" );
 $( document ).on( "submissionsuccess", function( evt, result ) {
     var iid = result.instanceId || '';
     if ( partner != 'GALOBBY180716' ) {
-        window.location = "http://data.myworld2030.org/?instanceid=" + iid ;
+        window.location = "http://data.myworld2030.org/?instanceid=" + iid + "&partner=" + partner;
     }
 });
 
