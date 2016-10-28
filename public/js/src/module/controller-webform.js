@@ -236,7 +236,7 @@ function _submitRecord() {
             }
 
             // this event is used in communicating back to iframe parent window
-            $( document ).trigger( 'submissionsuccess' );
+            $( document ).trigger( 'submissionsuccess' , record );
 
             if ( settings.returnUrl ) {
                 msg += '<br/>' + t( 'alert.submissionsuccess.redirectmsg' );

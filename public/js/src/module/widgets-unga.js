@@ -22,14 +22,19 @@ define( function( require, exports, module ) {
 } );
 
 // CUSTOM UNGA REDIRECT CODE
+
 var $ = require( 'jquery' );
-function getQueryStringValue(key) {
+function getQueryStringValue( key ) {
     return unescape(window.location.search.replace(new RegExp("^(?:.*[&\\?]" + escape(key).replace(/[\.\+\*]/g, "\\$&") + "(?:\\=([^&]*))?)?.*$", "i"), "$1"));
 }
-var partner = getQueryStringValue("partner");
-$(document).on( "submissionsuccess", function(evt) {
-    if (partner != 'GALOBBY180716') {
-        window.location = "http://data.myworld2030.org/";
+
+var partner = getQueryStringValue( "partner" );
+
+$( document ).on( "submissionsuccess", function( evt, result ) {
+    var iid = result.instanceId || '';
+    if ( partner != 'GALOBBY180716' ) {
+        window.location = "http://data.myworld2030.org/?instanceid=" + iid ;
     }
 });
+
 // END CUSTOM UNGA REDIRECT CODE
