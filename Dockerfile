@@ -1,4 +1,4 @@
-FROM phusion/baseimage:latest
+FROM kobotoolbox/phusion_armhf
 
 ENV ENKETO_SRC_DIR=/srv/src/enketo_express
 
