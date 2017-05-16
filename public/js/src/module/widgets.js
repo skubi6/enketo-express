@@ -24,6 +24,7 @@ var widgets = [
     require( '../../../../node_modules/enketo-core/src/widget/big-image/image-viewer' ),
     require( '../../../../node_modules/enketo-core/src/widget/comment/commentwidget' ),
     require( '../../../../node_modules/enketo-core/src/widget/image-map/image-map' ),
+    require( '../../../widget/image-customization/image-customization' )
 ];
 
 module.exports = widgets;
