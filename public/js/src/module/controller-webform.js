@@ -57,10 +57,6 @@ function init( selector, data ) {
                 loadErrors = loadErrors.concat( form.goTo( location.hash.substring( 1 ) ) );
             }
 
-            if ( form.encryptionKey ) {
-                loadErrors.unshift( '<strong>' + t( 'error.encryptionnotsupported' ) + '</strong>' );
-            }
-
             $formprogress = $( '.form-progress' );
 
             _setEventHandlers();
