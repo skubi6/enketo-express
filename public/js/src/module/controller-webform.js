@@ -246,6 +246,16 @@ function _submitRecord() {
         'deprecatedId': form.deprecatedID
     };
 
+    var f = {
+        encryptionKey: form.encryptionKey,
+        id: form.view.html.id, // TODO: after enketo-core support, use form.id
+        version: form.version,
+    };
+    record.complete = true;
+    var result = encryptor.encryptRecord( f, record );
+    //console.log( result.manifest );
+    //console.log( 'manifest', new XMLSerializer().serializeToString( result.manifest ) );
+    return;
     return connection.uploadRecord( record )
         .then( function( result ) {
             result = result || {};
