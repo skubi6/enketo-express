@@ -7,8 +7,8 @@ var forge = require( 'node-forge' );
 //    disableNativeCode: true
 //} );
 
-var SYMMETRIC_ALGORITHM = 'AES-CFB';
-var ASYMMETRIC_ALGORITHM = 'RSA-OAEP';
+var SYMMETRIC_ALGORITHM = 'AES-CFB'; // JAVA: "AES/CFB/PKCS5Padding"
+var ASYMMETRIC_ALGORITHM = 'RSA-OAEP'; // JAVA: "RSA/NONE/OAEPWithSHA256AndMGF1Padding"
 var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
 
 // these are temporary for testing
@@ -30,6 +30,12 @@ function encryptRecord( form, record ) {
     var publicKeyPem = '-----BEGIN PUBLIC KEY-----' + form.encryptionKey + '-----END PUBLIC KEY-----';
     var forgePublicKey = forge.pki.publicKeyFromPem( publicKeyPem );
     var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, forgePublicKey );
+    var ivSeedArray = _getIvSeedArray( record.instanceId, form.encryptionKey );
+    var ivCounter = 0;
+
+    console.log( 'ivSeedArray joined', ivSeedArray.join( '' ), ivSeedArray.length );
+    var sampleIv = forge.random.getBytesSync( 16 );
+    console.log( 'sample forge iv', sampleIv, sampleIv.length );
 
     // TODO: media files
     var elements = [ form.id ];
@@ -67,7 +73,6 @@ function encryptRecord( form, record ) {
     signatureEl.textContent = signature;
     //manifestEl.appendChild( signatureEl );
 
-
     var manifest = new Blob( [ new XMLSerializer().serializeToString( manifestEl ) ] );
     manifest.name = 'submission.xml';
 
@@ -77,7 +82,9 @@ function encryptRecord( form, record ) {
 
     saveAs( manifest, manifest.name );
 
-    var submissionXmlEnc = _encryptContent( record.xml, record.instanceId, symmetricKey );
+    _incrementByteAt( ivSeedArray, ( ivCounter % ivSeedArray.length ) );
+    ivCounter++;
+    var submissionXmlEnc = _encryptContent( record.xml, symmetricKey, ivSeedArray );
     submissionXmlEnc.name = 'submission.xml.enc';
     saveAs( submissionXmlEnc, submissionXmlEnc.name );
 
@@ -85,7 +92,7 @@ function encryptRecord( form, record ) {
     require( './utils' )
         .blobToArrayBuffer( submissionXmlEnc )
         .then( function( enc ) {
-            var dec = _decryptContent( enc, record.instanceId, symmetricKey );
+            var dec = _decryptContent( enc, record.instanceId, symmetricKey, ivSeedArray );
             saveAs( dec, dec.name );
         } );
 
@@ -125,7 +132,7 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
     return btoa( encryptedDigest );
 }
 
-function _generateIv( instanceId, symmetricKey ) {
+function _getIvSeedArray( instanceId, symmetricKey ) {
     var IV_BYTE_LENGTH = 16;
     // iv is the md5 hash of the instanceID and the symmetric key
     var md = forge.md5.create();
@@ -133,34 +140,34 @@ function _generateIv( instanceId, symmetricKey ) {
     md.update( symmetricKey );
     var messageDigest = md.digest().getBytes();
     var ivSeedArray = [];
+
     for ( var i = 0; i < IV_BYTE_LENGTH; i++ ) {
         ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ];
     }
 
-    // ++ messageDigest for each file in order. The submission.xml is the last!
-    _incrementByteAt( ivSeedArray, 0 );
-    _incrementByteAt( ivSeedArray, 1 );
-    //_incrementByteAt( ivSeedArray, 2 );
-    //_incrementByteAt( ivSeedArray, 3 );
-
-    return ivSeedArray.join( '' );
+    return ivSeedArray; //.join( '' );
 
     // 'b95YeKbWh1BX7aL/w0W4Hw==', // index 0,1,2
     // 'b95YeabWh1BX7aL/w0W4Hw==', // index 0,1,2,3
 }
 
-function _encryptContent( content, instanceId, symmetricKey ) {
-    var iv = _generateIv( instanceId, symmetricKey );
+function _encryptContent( content, symmetricKey, ivSeedArray ) {
+    //var iv = _generateIv( instanceId, symmetricKey );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
 
     cipher.start( {
-        iv: iv,
-        blockSize: 16
+        iv: ivSeedArray.join( '' )
     } );
     cipher.update( forge.util.createBuffer( content ) );
-    var pass = cipher.finish();
-    var byteString = cipher.output.getBytes();
 
+    // manual padding: https://github.com/digitalbazaar/forge/issues/100#issuecomment-34837467
+    var pass = cipher.finish( function( blockSize, buffer ) {
+        var padding = blockSize - ( buffer.length() % blockSize );
+        buffer.fillWithByte( padding, padding );
+        return true;
+    } );
+    var byteString = cipher.output.getBytes();
+    console.log( 'cipher output', byteString );
     console.debug( 'pass', pass );
 
     // write the bytes of the string to an ArrayBuffer
@@ -186,24 +193,21 @@ function _incrementByteAt( arr, index ) {
     return arr;
 }
 
-
 module.exports = {
     encryptRecord: encryptRecord,
 };
 
-
-
-function _decryptContent( encryptedContent, instanceId, key ) {
+function _decryptContent( encryptedContent, instanceId, key, ivSeedArray ) {
     console.log( 'encrypted content', encryptedContent );
     // need equivalent to Java's: AES/CFB/PKCS5Padding
-    var iv = _generateIv( instanceId, key );
+    //var iv = _generateIv( instanceId, key );
     // var signature = atob( base64Signature );
     //var encryptedContentBuffer = new forge.util.ByteBuffer( encryptedContent );
     var decipher = forge.cipher.createDecipher( SYMMETRIC_ALGORITHM, key );
 
     decipher.start( {
-        iv: iv,
-        blockSize: 16
+        iv: ivSeedArray.join( '' ),
+        //blockSize: 16
     } );
     decipher.update( forge.util.createBuffer( encryptedContent ) );
     var pass = decipher.finish();
