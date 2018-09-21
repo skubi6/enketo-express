@@ -1,6 +1,7 @@
 'use strict';
 
 var forge = require( 'node-forge' );
+var aesjs = require( 'aes-js' );
 
 // TODO: SHOULD WE DISABLE NATIVE CODE FOR ROBUSTNESS AT THE EXPENSE OF PERFORMANCE?
 //forge( {
@@ -27,13 +28,16 @@ var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
  */
 function encryptRecord( form, record ) {
     var symmetricKey = _generateSymmetricKey();
+    console.log( 'encryption key in form', form.encryptionKey );
     var publicKeyPem = '-----BEGIN PUBLIC KEY-----' + form.encryptionKey + '-----END PUBLIC KEY-----';
     var forgePublicKey = forge.pki.publicKeyFromPem( publicKeyPem );
     var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, forgePublicKey );
+
     var ivSeedArray = _getIvSeedArray( record.instanceId, form.encryptionKey );
     var ivCounter = 0;
 
-    console.log( 'ivSeedArray joined', ivSeedArray.join( '' ), ivSeedArray.length );
+
+    console.log( 'ivSeedArray', ivSeedArray, ivSeedArray.length );
     var sampleIv = forge.random.getBytesSync( 16 );
     console.log( 'sample forge iv', sampleIv, sampleIv.length );
 
@@ -82,9 +86,12 @@ function encryptRecord( form, record ) {
 
     saveAs( manifest, manifest.name );
 
-    _incrementByteAt( ivSeedArray, ( ivCounter % ivSeedArray.length ) );
-    ivCounter++;
-    var submissionXmlEnc = _encryptContent( record.xml, symmetricKey, ivSeedArray );
+    //_incrementByteAt( ivSeedArray, ( ivCounter % ivSeedArray.length ) );
+    ++ivSeedArray[ ivCounter % ivSeedArray.length ];
+    ++ivCounter;
+    //var submissionXmlEnc =
+    _encryptContent( record.xml, symmetricKey, ivSeedArray );
+    var submissionXmlEnc = _OLDencryptContent( record.xml, symmetricKey, ivSeedArray );
     submissionXmlEnc.name = 'submission.xml.enc';
     saveAs( submissionXmlEnc, submissionXmlEnc.name );
 
@@ -101,20 +108,47 @@ function encryptRecord( form, record ) {
 
 function _generateSymmetricKey() {
     // 256 bit key (32 bytes) for AES256
-    return forge.random.getBytesSync( 32 );
+    //return forge.random.getBytesSync( 32 );
+    // DEBUG
+    return [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 ];
 }
 
+//"RSA/NONE/OAEPWithSHA256AndMGF1Padding"
 function _encryptSymmetricKey( symmetricKey, publicKey ) {
+    
     var encryptedKey = publicKey.encrypt( symmetricKey, ASYMMETRIC_ALGORITHM, {
-        md: forge.md.sha256.create()
+        md: forge.md.sha256.create(),
+        mgf1: {
+            md: forge.md.sha1.create()
+        }
     } );
 
-    var base64EncryptedKey = btoa( encryptedKey );
-
-    console.debug( 'encrypted symmetric key', base64EncryptedKey );
+    // var base64EncryptedKey = btoa( encryptedKey );
+    var base64EncryptedKey = forge.util.encode64( encryptedKey );
+    //var base64EncryptedKey = b64EncodeUnicode( encryptedKey );
+    console.debug( 'encrypted symmetric key', b64EncodeUnicode( encryptedKey ), forge.util.encode64( encryptedKey ), btoa( encryptedKey ) );
     return base64EncryptedKey;
 }
 
+function b64EncodeUnicode( str ) {
+    // first we use encodeURIComponent to get percent-encoded UTF-8,
+    // then we convert the percent encodings into raw bytes which
+    // can be fed into btoa.
+    return btoa( encodeURIComponent( str ).replace( /%([0-9A-F]{2})/g,
+        function toSolidBytes( match, p1 ) {
+            return String.fromCharCode( '0x' + p1 );
+        } ) );
+}
+
+function _base64ToArrayBuffer( base64 ) {
+    var binary_string = window.atob( base64 );
+    var len = binary_string.length;
+    var bytes = new Uint8Array( len );
+    for ( var i = 0; i < len; i++ ) {
+        bytes[ i ] = binary_string.charCodeAt( i );
+    }
+    return bytes.buffer;
+}
 
 function _md5( content ) {
     var md = forge.md.md5.create();
@@ -133,6 +167,8 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
 }
 
 function _getIvSeedArray( instanceId, symmetricKey ) {
+
+    //return [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36 ];
     var IV_BYTE_LENGTH = 16;
     // iv is the md5 hash of the instanceID and the symmetric key
     var md = forge.md5.create();
@@ -142,7 +178,7 @@ function _getIvSeedArray( instanceId, symmetricKey ) {
     var ivSeedArray = [];
 
     for ( var i = 0; i < IV_BYTE_LENGTH; i++ ) {
-        ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ];
+        ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ].charCodeAt( 0 );
     }
 
     return ivSeedArray; //.join( '' );
@@ -152,20 +188,33 @@ function _getIvSeedArray( instanceId, symmetricKey ) {
 }
 
 function _encryptContent( content, symmetricKey, ivSeedArray ) {
+    var segmentSize = 128 / 8; //8;
+    var aesCfb = new aesjs.ModeOfOperation.cfb( symmetricKey, ivSeedArray, segmentSize );
+    var contentBytes = aesjs.utils.utf8.toBytes( content );
+    var paddedContentBytes = aesjs.padding.pkcs7.pad( contentBytes );
+    var encryptedBytes = aesCfb.encrypt( paddedContentBytes );
+
+    console.log( 'encrypted bytes with aejs', encryptedBytes, encryptedBytes.length );
+
+    return new Blob( encryptedBytes );
+}
+
+function _OLDencryptContent( content, symmetricKey, ivSeedArray ) {
     //var iv = _generateIv( instanceId, symmetricKey );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
 
+    var contentBytes = aesjs.utils.utf8.toBytes( content );
+    var paddedContentBytes = aesjs.padding.pkcs7.pad( contentBytes );
+
     cipher.start( {
-        iv: ivSeedArray.join( '' )
+        iv: ivSeedArray //.join( '' )
     } );
-    cipher.update( forge.util.createBuffer( content ) );
+    cipher.update( forge.util.createBuffer( paddedContentBytes ) );
+    //cipher.update( paddedContentBytes );
+
 
     // manual padding: https://github.com/digitalbazaar/forge/issues/100#issuecomment-34837467
-    var pass = cipher.finish( function( blockSize, buffer ) {
-        var padding = blockSize - ( buffer.length() % blockSize );
-        buffer.fillWithByte( padding, padding );
-        return true;
-    } );
+    var pass = cipher.finish();
     var byteString = cipher.output.getBytes();
     console.log( 'cipher output', byteString );
     console.debug( 'pass', pass );
@@ -177,6 +226,8 @@ function _encryptContent( content, symmetricKey, ivSeedArray ) {
     for ( var i = 0; i < byteString.length; i++ ) {
         array[ i ] = byteString.charCodeAt( i );
     }
+
+    console.log( 'old forge encrypted array', array );
 
     // write the ArrayBuffer to a blob
     var blob = new Blob( [ array ] );
