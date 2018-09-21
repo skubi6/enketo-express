@@ -36,12 +36,12 @@ function encryptRecord( form, record ) {
     //var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, publicKeyPem );
     var base64EncryptedSymmetricKey = _OLDencryptSymmetricKey( symmetricKey, forgePublicKey );
 
-    var ivSeedArray = _getIvSeedArray( record.instanceId, form.encryptionKey );
+    var ivSeedArray = _getIvSeedArray( record.instanceId, symmetricKey );
     var ivCounter = 0;
 
     console.log( 'ivSeedArray', ivSeedArray, ivSeedArray.length );
-    var sampleIv = forge.random.getBytesSync( 16 );
-    console.log( 'sample forge iv', sampleIv, sampleIv.length );
+    //var sampleIv = forge.random.getBytesSync( 16 );
+    //console.log( 'sample forge iv', sampleIv, sampleIv.length );
 
     // TODO: media files
     var elements = [ form.id ];
@@ -52,7 +52,7 @@ function encryptRecord( form, record ) {
     var signature = _getBase64EncryptedElementSignature( elements, forgePublicKey );
 
     var manifestEl = document.createElementNS( ODK_SUBMISSION_NS, 'data' );
-    manifestEl.setAttribute( 'client', 'enketo' ); // temporary
+    manifestEl.setAttribute( '_client', 'enketo' ); // temporary for debugging
     manifestEl.setAttribute( 'encrypted', 'yes' );
     manifestEl.setAttribute( 'id', form.id );
     if ( form.version ) {
@@ -94,6 +94,9 @@ function encryptRecord( form, record ) {
     //var submissionXmlEnc =
     // _encryptContent( record.xml, symmetricKey, ivSeedArray );
     var submissionXmlEnc = _OLDencryptContent( record.xml, symmetricKey, ivSeedArray );
+
+
+
     submissionXmlEnc.name = 'submission.xml.enc';
     saveAs( submissionXmlEnc, submissionXmlEnc.name );
 
@@ -205,6 +208,14 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
 }
 
 function _getIvSeedArray( instanceId, symmetricKey ) {
+    console.log( 'original symmetric key', symmetricKey );
+    // DEBUG
+    //instanceId = 'uuid:aab60510-f435-45ca-a7ae-dec99914a8c8';
+    //symmetricKey = [ -123, -95, -57, -51, -47, -34, -61, 71, -30, 30, 72, 71, -9, -124, -1, -92, 88, -56, -115, -87, 112, 62, 0, -24, 107, -72, 67, -85, -85, 96, 60, -24 ]
+    //.map( function( e ) { return e < 0 ? e + 256 : e; } )
+    //    .map( function( code ) { return String.fromCharCode( code ); } ).join( '' );
+
+    console.log( 'symmetric key to hash for iv', symmetricKey );
 
     //return [ 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36 ];
     var IV_BYTE_LENGTH = 16;
@@ -219,75 +230,28 @@ function _getIvSeedArray( instanceId, symmetricKey ) {
         ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ].charCodeAt( 0 );
     }
 
-    return ivSeedArray; //.join( '' );
+    // to return same result as Java (some signed/unsigned thing)
+    // https://stackoverflow.com/questions/46135031/different-md5-hash-results-in-java-and-javascript
+    return ivSeedArray; //.map( function( e ) { return e >= 128 ? e - 256 : e; } ); //.join( '' );
 
     // 'b95YeKbWh1BX7aL/w0W4Hw==', // index 0,1,2
     // 'b95YeabWh1BX7aL/w0W4Hw==', // index 0,1,2,3
 }
 
-function _encryptContent( content, symmetricKey, ivSeedArray ) {
-    console.time( 'aes-js' );
-    var segmentSize = 128 / 8; //8;
-    var aesCfb = new aesjs.ModeOfOperation.cfb( symmetricKey, ivSeedArray, segmentSize );
-    var contentBytes = aesjs.utils.utf8.toBytes( content );
-    var paddedContentBytes = aesjs.padding.pkcs7.pad( contentBytes );
-    var encryptedBytes = aesCfb.encrypt( paddedContentBytes );
-
-    console.log( 'encrypted bytes with aejs', encryptedBytes, encryptedBytes.length );
-    console.timeEnd( 'aes-js' );
-    return new Blob( encryptedBytes );
-}
-
 //"AES/CFB/PKCS5Padding"
 function _OLDencryptContent( content, symmetricKey, ivSeedArray ) {
     console.time( 'forge)' );
-    //var iv = _generateIv( instanceId, symmetricKey );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
 
-    //var contentBytes = aesjs.utils.utf8.toBytes( content );
-    //var paddedContentBytes = aesjs.padding.pkcs7.pad( contentBytes );
+    cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad.bind( cipher.mode );
 
-    //var paddingLength = 16 - content.length % 16;
-    //console.log( 'paddinglength', paddingLength );
-    // if ( paddingLength === 0 ) paddingLength = 16;
+    var iv = ivSeedArray.map( function( code ) { return String.fromCharCode( code ); } ).join( '' );
 
-    //var padding = '';
-    //for ( let i = 0; i < paddingLength; i++ ) {
-    //    padding += forge.util.hexToBytes( paddingLength.toString( 16 ) );
-    //}
-    //const paddedContent = content + padding;
-
-
-    //cipher.mode.pad = function( input ) {
-    //    var blockSize = 16;
-    //    
-    //    var padding = blockSize - ( input.length() % blockSize );
-    //    console.log( 'padding', padding );
-    //    input.fillWithByte( padding, padding );
-    //    return true;
-    //};
-    /*
-        cipher.mode.pad = function( input ) {
-            var padding = this.blockSize - ( input.length() % this.blockSize );
-            input.fillWithByte( padding, padding );
-            return true;
-        };
-    */
-    cipher.mode.pad = function( input, options ) {
-        // add PKCS#7 padding to block (each pad byte is the
-        // value of the number of pad bytes)
-        var padding = ( input.length() === this.blockSize ?
-            this.blockSize : ( this.blockSize - input.length() ) );
-        input.fillWithByte( padding, padding );
-        return true;
-    };
-
-    //cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad;
+    console.log( 'iv to use for encryption', iv );
 
     cipher.start( {
-        iv: ivSeedArray //.join( '' )
+        iv: iv
     } );
-    //cipher.update( forge.util.createBuffer( paddedContentBytes ) );
 
     cipher.update( forge.util.createBuffer( content ) );
 
