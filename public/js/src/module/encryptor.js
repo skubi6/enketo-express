@@ -39,7 +39,6 @@ function encryptRecord( form, record ) {
     var ivSeedArray = _getIvSeedArray( record.instanceId, form.encryptionKey );
     var ivCounter = 0;
 
-
     console.log( 'ivSeedArray', ivSeedArray, ivSeedArray.length );
     var sampleIv = forge.random.getBytesSync( 16 );
     console.log( 'sample forge iv', sampleIv, sampleIv.length );
@@ -239,24 +238,70 @@ function _encryptContent( content, symmetricKey, ivSeedArray ) {
     return new Blob( encryptedBytes );
 }
 
+//"AES/CFB/PKCS5Padding"
 function _OLDencryptContent( content, symmetricKey, ivSeedArray ) {
     console.time( 'forge)' );
     //var iv = _generateIv( instanceId, symmetricKey );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
 
-    var contentBytes = aesjs.utils.utf8.toBytes( content );
-    var paddedContentBytes = aesjs.padding.pkcs7.pad( contentBytes );
+    //var contentBytes = aesjs.utils.utf8.toBytes( content );
+    //var paddedContentBytes = aesjs.padding.pkcs7.pad( contentBytes );
+
+    //var paddingLength = 16 - content.length % 16;
+    //console.log( 'paddinglength', paddingLength );
+    // if ( paddingLength === 0 ) paddingLength = 16;
+
+    //var padding = '';
+    //for ( let i = 0; i < paddingLength; i++ ) {
+    //    padding += forge.util.hexToBytes( paddingLength.toString( 16 ) );
+    //}
+    //const paddedContent = content + padding;
+
+
+    //cipher.mode.pad = function( input ) {
+    //    var blockSize = 16;
+    //    
+    //    var padding = blockSize - ( input.length() % blockSize );
+    //    console.log( 'padding', padding );
+    //    input.fillWithByte( padding, padding );
+    //    return true;
+    //};
+    /*
+        cipher.mode.pad = function( input ) {
+            var padding = this.blockSize - ( input.length() % this.blockSize );
+            input.fillWithByte( padding, padding );
+            return true;
+        };
+    */
+    cipher.mode.pad = function( input, options ) {
+        // add PKCS#7 padding to block (each pad byte is the
+        // value of the number of pad bytes)
+        var padding = ( input.length() === this.blockSize ?
+            this.blockSize : ( this.blockSize - input.length() ) );
+        input.fillWithByte( padding, padding );
+        return true;
+    };
+
+    //cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad;
 
     cipher.start( {
         iv: ivSeedArray //.join( '' )
     } );
-    cipher.update( forge.util.createBuffer( paddedContentBytes ) );
-    //cipher.update( paddedContentBytes );
+    //cipher.update( forge.util.createBuffer( paddedContentBytes ) );
 
+    cipher.update( forge.util.createBuffer( content ) );
 
     // manual padding: https://github.com/digitalbazaar/forge/issues/100#issuecomment-34837467
     var pass = cipher.finish();
+    var encrypted = cipher.output;
+
+    console.log( 'raw cipher output', encrypted );
+    //var padding = 16 - ( encrypted.length() % 16 );
+    //console.log( 'missing bytes', padding );
+    //encrypted.fillWithByte( 0, padding );
+
     var byteString = cipher.output.getBytes();
+
     console.log( 'cipher output', byteString );
     console.debug( 'pass', pass );
 
@@ -297,12 +342,34 @@ function _decryptContent( encryptedContent, instanceId, key, ivSeedArray ) {
     // var signature = atob( base64Signature );
     //var encryptedContentBuffer = new forge.util.ByteBuffer( encryptedContent );
     var decipher = forge.cipher.createDecipher( SYMMETRIC_ALGORITHM, key );
+    //decipher.mode.unpad = forge.cipher.modes.cbc.prototype.unpad;
+
+    decipher.mode.unpad = function( output, options ) {
+        // check for error: input data not a multiple of blockSize
+        if ( options.overflow > 0 ) {
+            return false;
+        }
+
+        // ensure padding byte count is valid
+        var len = output.length();
+        var count = output.at( len - 1 );
+        if ( count > ( this.blockSize << 2 ) ) {
+            return false;
+        }
+
+        // trim off padding bytes
+        output.truncate( count );
+        return true;
+    };
+
+
 
     decipher.start( {
-        iv: ivSeedArray.join( '' ),
+        iv: ivSeedArray //.join( '' ),
         //blockSize: 16
     } );
     decipher.update( forge.util.createBuffer( encryptedContent ) );
+
     var pass = decipher.finish();
     var byteString = decipher.output.getBytes();
 
