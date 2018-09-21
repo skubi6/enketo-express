@@ -1,6 +1,7 @@
 'use strict';
 
 var forge = require( 'node-forge' );
+var utils = require( './utils' )
 
 // TODO: SHOULD WE DISABLE NATIVE CODE FOR ROBUSTNESS AT THE EXPENSE OF PERFORMANCE?
 //forge( {
@@ -72,7 +73,20 @@ function encryptRecord( form, record ) {
 
     saveAs( manifest, manifest.name );
 
-    //_incrementByteAt( ivSeedArray, ( ivCounter % ivSeedArray.length ) );
+    if ( record.files ) {
+        record.files.forEach( function( file ) {
+            console.log( 'file: ', file );
+            ++ivSeedArray[ ivCounter % ivSeedArray.length ];
+            ++ivCounter;
+            utils.blobToArrayBuffer( file )
+                .then( function( content ) {
+                    var mediaFileEnc = _encryptContent( content, symmetricKey, ivSeedArray );
+                    mediaFileEnc.name = file.name + '.enc';
+                    saveAs( mediaFileEnc, mediaFileEnc.name );
+                } );
+        } );
+    }
+
     ++ivSeedArray[ ivCounter % ivSeedArray.length ];
     ++ivCounter;
     var submissionXmlEnc = _encryptContent( record.xml, symmetricKey, ivSeedArray );
@@ -81,7 +95,7 @@ function encryptRecord( form, record ) {
     saveAs( submissionXmlEnc, submissionXmlEnc.name );
 
     // DEBUG
-    require( './utils' )
+    utils
         .blobToArrayBuffer( submissionXmlEnc )
         .then( function( enc ) {
             var dec = _decryptContent( enc, record.instanceId, symmetricKey, ivSeedArray );
@@ -102,9 +116,9 @@ function _encryptSymmetricKey( symmetricKey, publicKey ) {
     var encryptedKey = publicKey.encrypt( symmetricKey, ASYMMETRIC_ALGORITHM, {
         md: forge.md.sha256.create(),
         mgf: forge.mgf.mgf1.create( forge.md.sha1.create() )
-        // mgf1: {
-        //     md: forge.md.sha1.create()
-        // }
+        //mgf1: {
+        //  md: forge.md.sha1.create()
+        //}
     } );
 
     // var base64EncryptedKey = btoa( encryptedKey );
@@ -167,9 +181,9 @@ function _getIvSeedArray( instanceId, symmetricKey ) {
 
 }
 
-// equivalen to Java "AES/CFB/PKCS5Padding"
+// equivalent to Java "AES/CFB/PKCS5Padding"
 function _encryptContent( content, symmetricKey, ivSeedArray ) {
-    console.time( 'forge)' );
+    console.time( 'forge' );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
 
     cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad.bind( cipher.mode );
