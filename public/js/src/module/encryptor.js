@@ -2,6 +2,7 @@
 
 var forge = require( 'node-forge' );
 var aesjs = require( 'aes-js' );
+var NodeRSA = require( 'node-rsa' );
 
 // TODO: SHOULD WE DISABLE NATIVE CODE FOR ROBUSTNESS AT THE EXPENSE OF PERFORMANCE?
 //forge( {
@@ -27,11 +28,13 @@ var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
  * @param {{instanceId: string, xml: string, files?: [blob], complete?: boolean}} record 
  */
 function encryptRecord( form, record ) {
+    console.log( 'xml record', record.xml );
     var symmetricKey = _generateSymmetricKey();
     console.log( 'encryption key in form', form.encryptionKey );
     var publicKeyPem = '-----BEGIN PUBLIC KEY-----' + form.encryptionKey + '-----END PUBLIC KEY-----';
     var forgePublicKey = forge.pki.publicKeyFromPem( publicKeyPem );
-    var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, forgePublicKey );
+    //var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, publicKeyPem );
+    var base64EncryptedSymmetricKey = _OLDencryptSymmetricKey( symmetricKey, forgePublicKey );
 
     var ivSeedArray = _getIvSeedArray( record.instanceId, form.encryptionKey );
     var ivCounter = 0;
@@ -90,7 +93,7 @@ function encryptRecord( form, record ) {
     ++ivSeedArray[ ivCounter % ivSeedArray.length ];
     ++ivCounter;
     //var submissionXmlEnc =
-    _encryptContent( record.xml, symmetricKey, ivSeedArray );
+    // _encryptContent( record.xml, symmetricKey, ivSeedArray );
     var submissionXmlEnc = _OLDencryptContent( record.xml, symmetricKey, ivSeedArray );
     submissionXmlEnc.name = 'submission.xml.enc';
     saveAs( submissionXmlEnc, submissionXmlEnc.name );
@@ -108,19 +111,55 @@ function encryptRecord( form, record ) {
 
 function _generateSymmetricKey() {
     // 256 bit key (32 bytes) for AES256
-    //return forge.random.getBytesSync( 32 );
+    return forge.random.getBytesSync( 32 );
     // DEBUG
-    return [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 ];
+    //return [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32 ];
 }
 
 //"RSA/NONE/OAEPWithSHA256AndMGF1Padding"
 function _encryptSymmetricKey( symmetricKey, publicKey ) {
-    
+    var options;
+    var key = new NodeRSA();
+    key.importKey( publicKey );
+
+    console.log( 'key test pass?', key.isPublic( true ), key.getKeySize() );
+
+    options = {
+        environment: 'browser',
+        encryptionScheme: {
+            scheme: 'pkcs1_oaep',
+            hash: 'sha256'
+        }
+    };
+
+    // generates during java decryption: 
+    // java.security.InvalidKeyException: Wrong algorithm: AES or Rijndael required
+
+    options = {
+        environment: 'browser',
+        encryptionScheme: 'pkcs1_oaep',
+        signingScheme: 'pkcs1-sha256'
+    };
+
+    // generates: javax.crypto.BadPaddingException: data hash wrong
+
+    key.setOptions( options );
+
+    var base64EncryptedKey = key.encrypt( symmetricKey, 'base64' );
+
+    console.log( 'encrypted symmetric key', base64EncryptedKey );
+    return base64EncryptedKey;
+}
+
+//"RSA/NONE/OAEPWithSHA256AndMGF1Padding"
+function _OLDencryptSymmetricKey( symmetricKey, publicKey ) {
+    console.log( 'symmetric key to use for RSA encryption', symmetricKey, typeof symmetricKey );
     var encryptedKey = publicKey.encrypt( symmetricKey, ASYMMETRIC_ALGORITHM, {
         md: forge.md.sha256.create(),
-        mgf1: {
-            md: forge.md.sha1.create()
-        }
+        mgf: forge.mgf.mgf1.create( forge.md.sha1.create() )
+        // mgf1: {
+        //     md: forge.md.sha1.create()
+        // }
     } );
 
     // var base64EncryptedKey = btoa( encryptedKey );
@@ -188,6 +227,7 @@ function _getIvSeedArray( instanceId, symmetricKey ) {
 }
 
 function _encryptContent( content, symmetricKey, ivSeedArray ) {
+    console.time( 'aes-js' );
     var segmentSize = 128 / 8; //8;
     var aesCfb = new aesjs.ModeOfOperation.cfb( symmetricKey, ivSeedArray, segmentSize );
     var contentBytes = aesjs.utils.utf8.toBytes( content );
@@ -195,11 +235,12 @@ function _encryptContent( content, symmetricKey, ivSeedArray ) {
     var encryptedBytes = aesCfb.encrypt( paddedContentBytes );
 
     console.log( 'encrypted bytes with aejs', encryptedBytes, encryptedBytes.length );
-
+    console.timeEnd( 'aes-js' );
     return new Blob( encryptedBytes );
 }
 
 function _OLDencryptContent( content, symmetricKey, ivSeedArray ) {
+    console.time( 'forge)' );
     //var iv = _generateIv( instanceId, symmetricKey );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
 
@@ -227,6 +268,7 @@ function _OLDencryptContent( content, symmetricKey, ivSeedArray ) {
         array[ i ] = byteString.charCodeAt( i );
     }
 
+    console.timeEnd( 'forge' );
     console.log( 'old forge encrypted array', array );
 
     // write the ArrayBuffer to a blob

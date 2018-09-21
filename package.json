@@ -60,6 +60,7 @@
         "lodash": "4.17.x",
         "morgan": "1.x.x",
         "node-forge": "^0.7.6",
+        "node-rsa": "^1.0.1",
         "node-sass": "^4.9.2",
         "papaparse": "4.6.x",
         "pug": "2.0.3",
