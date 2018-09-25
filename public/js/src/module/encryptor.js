@@ -2,6 +2,7 @@
 
 var forge = require( 'node-forge' );
 var utils = require( './utils' );
+var SparkMD5 = require( 'spark-md5' );
 
 // TODO: SHOULD WE DISABLE NATIVE CODE FOR ROBUSTNESS AT THE EXPENSE OF PERFORMANCE?
 //forge( {
@@ -26,20 +27,13 @@ function encryptRecord( form, record ) {
     var publicKeyPem = '-----BEGIN PUBLIC KEY-----' + form.encryptionKey + '-----END PUBLIC KEY-----';
     var forgePublicKey = forge.pki.publicKeyFromPem( publicKeyPem );
     var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, forgePublicKey );
-
     var seed = new Seed( record.instanceId, symmetricKey ); //_getIvSeedArray( record.instanceId, symmetricKey );
 
-
-    //console.log( 'ivSeedArray', ivSeedArray, ivSeedArray.length );
-
-    // TODO: media files
     var elements = [ form.id ];
     if ( form.version ) {
         elements.push( form.version );
     }
-    elements = elements.concat( [ base64EncryptedSymmetricKey, record.instanceId, 'submission.xml::' + _md5( record.xml ) ] );
-    console.log( 'elements', elements );
-    var signature = _getBase64EncryptedElementSignature( elements, forgePublicKey );
+    elements = elements.concat( [ base64EncryptedSymmetricKey, record.instanceId ] );
 
     var manifestEl = document.createElementNS( ODK_SUBMISSION_NS, 'data' );
     manifestEl.setAttribute( '_client', 'enketo' ); // temporary for debugging
@@ -70,12 +64,13 @@ function encryptRecord( form, record ) {
                 mediaEl.appendChild( fileEl );
                 manifestEl.appendChild( mediaEl );
             } );
-            console.log( 'done with media' );
             return blobs;
         } )
         .then( function( blobs ) {
+            console.log( 'encrypting xml submission' );
             var submissionXmlEnc = _encryptContent( record.xml, symmetricKey, seed );
             submissionXmlEnc.name = 'submission.xml.enc';
+            submissionXmlEnc.md5 = _md5ArrayBuffer( record.xml );
             var xmlFileEl = document.createElementNS( ODK_SUBMISSION_NS, 'encryptedXmlFile' );
             xmlFileEl.textContent = submissionXmlEnc.name;
             manifestEl.appendChild( xmlFileEl );
@@ -92,9 +87,14 @@ function encryptRecord( form, record ) {
         } )
         .then( function( blobs ) {
             console.log( 'blobs done', blobs );
+            var fileMd5s = blobs.map( function( blob ) {
+                return blob.name.substring( 0, blob.name.length - 4 ) + '::' + blob.md5;
+            } );
+            elements = elements.concat( fileMd5s );
+            console.log( 'elements', elements );
             var signatureEl = document.createElementNS( ODK_SUBMISSION_NS, 'base64EncryptedElementSignature' );
-            signatureEl.textContent = signature;
-            //manifestEl.appendChild( signatureEl );
+            signatureEl.textContent = _getBase64EncryptedElementSignature( elements, forgePublicKey );
+            manifestEl.appendChild( signatureEl );
 
             var manifest = new Blob( [ new XMLSerializer().serializeToString( manifestEl ) ] );
             manifest.name = 'submission.xml';
@@ -103,20 +103,12 @@ function encryptRecord( form, record ) {
             saveAs( manifest, manifest.name );
 
             // DEBUG
-            var dSeed = new Seed( record.instanceId, symmetricKey );
-
-            /**
-             * seed incrementation messed up due to async simultaneous calls
-             */
-            blobs.forEach( function( blob ) {
-                utils
-                    .blobToArrayBuffer( blob )
-                    .then( function( enc ) {
-                        var dec = _decryptContent( enc, symmetricKey, dSeed );
-                        saveAs( dec, 'decrypted-' + blob.name.substring( 0, blob.name.length - 4 ) );
+            _decryptFiles( blobs, symmetricKey, new Seed( record.instanceId, symmetricKey ) )
+                .then( function( blbs ) {
+                    blbs.forEach( function( blob ) {
+                        saveAs( blob, blob.name );
                     } );
-            } );
-
+                } );
 
             return { manifest: manifest, encryptedFiles: blobs };
         } );
@@ -129,14 +121,9 @@ function _generateSymmetricKey() {
 
 // Equivalent to "RSA/NONE/OAEPWithSHA256AndMGF1Padding"
 function _encryptSymmetricKey( symmetricKey, publicKey ) {
-    console.log( 'symmetric key to encrypt', symmetricKey, typeof symmetricKey );
+    console.log( 'symm key to encrypt', symmetricKey );
     var encryptedKey = publicKey.encrypt( symmetricKey, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
-
-    // var base64EncryptedKey = btoa( encryptedKey );
-    var base64EncryptedKey = forge.util.encode64( encryptedKey );
-    //var base64EncryptedKey = b64EncodeUnicode( encryptedKey );
-    //console.debug( 'encrypted symmetric key', b64EncodeUnicode( encryptedKey ), forge.util.encode64( encryptedKey ), btoa( encryptedKey ) );
-    return base64EncryptedKey;
+    return forge.util.encode64( encryptedKey );
 }
 /*
 function b64EncodeUnicode( str ) {
@@ -153,7 +140,16 @@ function b64EncodeUnicode( str ) {
 function _md5( content ) {
     var md = forge.md.md5.create();
     md.update( content );
+    var digest = md.digest();
+    console.log( 'digest forge', digest.toHex() );
+    console.log( 'alt' );
     return md.digest().toHex();
+}
+
+function _md5ArrayBuffer( buf ) {
+    var digest = SparkMD5.ArrayBuffer.hash( buf );
+    console.log( 'digest Spark', digest );
+    return digest;
 }
 
 function _getBase64EncryptedElementSignature( elements, publicKey ) {
@@ -163,64 +159,38 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
     var md = forge.md5.create();
     md.update( elementsStr );
     var messageDigest = md.digest().getBytes();
-    console.log( 'digest', messageDigest, typeof messageDigest );
+    console.log( 'digest to encrypt', messageDigest, typeof messageDigest );
+    //var messageDigest = SparkMD5.hash( elementsStr, true );
+
 
     var encryptedDigest = publicKey.encrypt( messageDigest, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
     var base64EncryptedDigest = forge.util.encode64( encryptedDigest );
     return base64EncryptedDigest;
 }
-/*
-function _getIvSeedArray( instanceId, symmetricKey ) {
-    console.log( 'original symmetric key', symmetricKey );
-    // DEBUG
-    //instanceId = 'uuid:aab60510-f435-45ca-a7ae-dec99914a8c8';
-    //symmetricKey = [ -123, -95, -57, -51, -47, -34, -61, 71, -30, 30, 72, 71, -9, -124, -1, -92, 88, -56, -115, -87, 112, 62, 0, -24, 107, -72, 67, -85, -85, 96, 60, -24 ]
-    //.map( function( e ) { return e < 0 ? e + 256 : e; } )
-    //    .map( function( code ) { return String.fromCharCode( code ); } ).join( '' );
 
-    console.log( 'symmetric key to hash for iv', symmetricKey );
-
-    var IV_BYTE_LENGTH = 16;
-
-    // iv is the md5 hash of the instanceID and the symmetric key
-    var md = forge.md5.create();
-    md.update( instanceId );
-    md.update( symmetricKey );
-    var messageDigest = md.digest().getBytes();
-    var ivSeedArray = [];
-
-    for ( var i = 0; i < IV_BYTE_LENGTH; i++ ) {
-        ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ].charCodeAt( 0 );
-    }
-
-    return ivSeedArray; //For Java comparison: .map( function( e ) { return e >= 128 ? e - 256 : e; } ); //.join( '' );
-
-}*/
 
 function _encryptMediaFiles( files, symmetricKey, seed ) {
     files = files || [];
 
     var funcs = files.map( function( file ) {
         return function() {
-            console.log( 'going to convert ', file );
+            console.time( 'arrayBuf ' + file.name );
             return utils.blobToArrayBuffer( file )
                 .then( function( content ) {
-                    console.log( 'content of mdia file to encrypt', content );
+                    console.timeEnd( 'arrayBuf ' + file.name );
+                    console.log( 'encrypting', file.name );
                     var mediaFileEnc = _encryptContent( content, symmetricKey, seed );
                     mediaFileEnc.name = file.name + '.enc';
-                    console.log( 'encrypted blob', mediaFileEnc );
+                    mediaFileEnc.md5 = _md5ArrayBuffer( content );
                     return mediaFileEnc;
                 } );
         };
     } );
     // This needs to be sequential for seed array incrementation!
     return funcs.reduce( function( prevPromise, func ) {
-        console.log( 'prevPromise', prevPromise );
         return prevPromise.then( function( result ) {
-            console.log( 'func', func, result );
             return func()
                 .then( function( blob ) {
-                    console.log( 'in reduce, ', blob );
                     result.push( blob );
                     return result;
                 } );
@@ -236,8 +206,10 @@ function _encryptContent( content, symmetricKey, seed ) {
 
     cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad.bind( cipher.mode );
 
+    var iv = seed.getIncrementedSeedArray();
+    console.log( 'iv to use', iv );
     cipher.start( {
-        iv: seed.getIncrementedSeedArray()
+        iv: iv
     } );
 
     cipher.update( forge.util.createBuffer( content ) );
@@ -267,6 +239,32 @@ function _encryptContent( content, symmetricKey, seed ) {
 module.exports = {
     encryptRecord: encryptRecord,
 };
+
+
+function _decryptFiles( files, symmetricKey, seed ) {
+    files = files || [];
+
+    var funcs = files.map( function( file ) {
+        return function() {
+            return utils.blobToArrayBuffer( file )
+                .then( function( content ) {
+                    var decrypted = _decryptContent( content, symmetricKey, seed );
+                    decrypted.name = 'decrypted-' + file.name.substring( 0, file.name.length - 4 );
+                    return decrypted;
+                } );
+        };
+    } );
+    // This needs to be sequential for seed array incrementation!
+    return funcs.reduce( function( prevPromise, func ) {
+        return prevPromise.then( function( result ) {
+            return func()
+                .then( function( blob ) {
+                    result.push( blob );
+                    return result;
+                } );
+        } );
+    }, Promise.resolve( [] ) );
+}
 
 function _decryptContent( encryptedContent, key, seed ) {
     console.log( 'encrypted content', encryptedContent );
@@ -325,15 +323,6 @@ function _decryptContent( encryptedContent, key, seed ) {
 
 
 function Seed( instanceId, symmetricKey ) {
-    //console.log( 'original symmetric key', symmetricKey );
-    // DEBUG
-    //instanceId = 'uuid:aab60510-f435-45ca-a7ae-dec99914a8c8';
-    //symmetricKey = [ -123, -95, -57, -51, -47, -34, -61, 71, -30, 30, 72, 71, -9, -124, -1, -92, 88, -56, -115, -87, 112, 62, 0, -24, 107, -72, 67, -85, -85, 96, 60, -24 ]
-    //.map( function( e ) { return e < 0 ? e + 256 : e; } )
-    //    .map( function( code ) { return String.fromCharCode( code ); } ).join( '' );
-
-    //console.log( 'symmetric key to hash for iv', symmetricKey );
-
     var IV_BYTE_LENGTH = 16;
 
     // iv is the md5 hash of the instanceID and the symmetric key

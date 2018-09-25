@@ -66,6 +66,7 @@
         "redis": "2.8.0",
         "request": "2.88.x",
         "serve-favicon": "2.x.x",
+        "spark-md5": "^3.0.0",
         "time-grunt": "1.x.x",
         "valid-url": "^1.0.9",
         "vex-dialog-enketo": "github:enketo/vex-dialog.git#b6e0f01",
