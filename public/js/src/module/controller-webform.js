@@ -57,6 +57,10 @@ function init( selector, data ) {
                 loadErrors = loadErrors.concat( form.goTo( location.hash.substring( 1 ) ) );
             }
 
+            if ( form.encryptionKey && !encryptor.isSupported() ) {
+                loadErrors.unshift( t( 'error.encryptionnotsupported' ) );
+            }
+
             $formprogress = $( '.form-progress' );
 
             _setEventHandlers();
@@ -441,8 +445,9 @@ function _saveRecord( recordName, confirmed, errorMsg ) {
 function _autoSaveRecord() {
     var record;
 
-    // do not auto-save a record if the record was loaded from storage
-    if ( form.recordName ) {
+    // Do not auto-save a record if the record was loaded from storage
+    // or if the form has enabled encryption
+    if ( form.recordName || form.encryptionKey ) {
         return Promise.resolve();
     }
 
@@ -600,7 +605,7 @@ function _setEventHandlers() {
         } ), 7 );
     } );
 
-    if ( settings.draftEnabled !== false ) {
+    if ( settings.draftEnabled !== false && !form.encryptionKey ) {
         $( '.form-footer [name="draft"]' ).on( 'change', function() {
             var text = ( $( this ).prop( 'checked' ) ) ? t( 'formfooter.savedraft.btn' ) : t( 'formfooter.submit.btn' );
             // Note: using .btnText plugin because button may be in a busy state => https://github.com/kobotoolbox/enketo-express/issues/1043

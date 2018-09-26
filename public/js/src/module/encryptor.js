@@ -18,6 +18,13 @@ var ASYMMETRIC_OPTIONS = {
 var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
 var OPENROSA_XFORMS_NS = 'http://openrosa.org/xforms';
 
+function isSupported() {
+    return typeof ArrayBuffer !== 'undefined' &&
+        new ArrayBuffer( 8 ).byteLength === 8 &&
+        typeof Uint8Array !== 'undefined' &&
+        new Uint8Array( 8 ).length === 8;
+}
+
 /**
  * 
  * @param {{id: string, version: string, encryptionKey: string}} form 
@@ -240,6 +247,7 @@ function _encryptContent( content, symmetricKey, seed ) {
 }
 
 module.exports = {
+    isSupported: isSupported,
     encryptRecord: encryptRecord,
     Seed: Seed
 };
