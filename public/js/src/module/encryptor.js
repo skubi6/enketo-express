@@ -16,6 +16,7 @@ var ASYMMETRIC_OPTIONS = {
     mgf: forge.mgf.mgf1.create( forge.md.sha1.create() )
 };
 var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
+var OPENROSA_XFORMS_NS = 'http://openrosa.org/xforms';
 
 /**
  * 
@@ -42,16 +43,15 @@ function encryptRecord( form, record ) {
     if ( form.version ) {
         manifestEl.setAttribute( 'version', form.version );
     }
-    manifestEl.setAttribute( 'instanceID', record.instanceId );
-    // TODO: submissionDate
-    manifestEl.setAttribute( 'submissionDate', new Date().toISOString() );
-    // We don't support encrypting incomplete records, but just in case it is added later, we'll set it as provided.
-    manifestEl.setAttribute( 'isComplete', ( !!record.complete ).toString() );
-    // TODO: markedAsCompleteDate
-    manifestEl.setAttribute( 'markedAsCompleteDate', new Date().toISOString() );
     var keyEl = document.createElementNS( ODK_SUBMISSION_NS, 'base64EncryptedKey' );
     keyEl.textContent = base64EncryptedSymmetricKey;
     manifestEl.appendChild( keyEl );
+
+    var metaEl = document.createElementNS( OPENROSA_XFORMS_NS, 'meta' );
+    var instanceIdEl = document.createElementNS( OPENROSA_XFORMS_NS, 'instanceID' );
+    instanceIdEl.textContent = record.instanceId;
+    metaEl.appendChild( instanceIdEl );
+    manifestEl.appendChild( metaEl );
 
     var saveAs = require( 'jszip/vendor/FileSaver' );
 
@@ -159,9 +159,9 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
     var md = forge.md5.create();
     md.update( elementsStr );
     var messageDigest = md.digest().getBytes();
-    console.log( 'digest to encrypt', messageDigest, typeof messageDigest );
-    //var messageDigest = SparkMD5.hash( elementsStr, true );
 
+    ///var messageDigest = SparkMD5.ArrayBuffer.hash( forge.util.createBuffer( elementsStr, 'utf8' ), true );
+    console.log( 'digest to encrypt', messageDigest, 'alternative', SparkMD5.hash( elementsStr, true ) );
 
     var encryptedDigest = publicKey.encrypt( messageDigest, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
     var base64EncryptedDigest = forge.util.encode64( encryptedDigest );
