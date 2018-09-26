@@ -21,7 +21,7 @@ var OPENROSA_XFORMS_NS = 'http://openrosa.org/xforms';
 /**
  * 
  * @param {{id: string, version: string, encryptionKey: string}} form 
- * @param {{instanceId: string, xml: string, files?: [blob], complete?: boolean}} record 
+ * @param {{instanceId: string, xml: string, files?: [blob]}} record 
  */
 function encryptRecord( form, record ) {
     var symmetricKey = _generateSymmetricKey();
@@ -53,13 +53,14 @@ function encryptRecord( form, record ) {
     metaEl.appendChild( instanceIdEl );
     manifestEl.appendChild( metaEl );
 
-    var saveAs = require( 'jszip/vendor/FileSaver' );
+    //var saveAs = require( 'jszip/vendor/FileSaver' );
 
-    _encryptMediaFiles( record.files, symmetricKey, seed )
+    return _encryptMediaFiles( record.files, symmetricKey, seed )
         .then( function( blobs ) {
             blobs.forEach( function( blob ) {
                 var mediaEl = document.createElementNS( ODK_SUBMISSION_NS, 'media' );
                 var fileEl = document.createElementNS( ODK_SUBMISSION_NS, 'file' );
+                fileEl.setAttribute( 'type', 'file' );
                 fileEl.textContent = blob.name;
                 mediaEl.appendChild( fileEl );
                 manifestEl.appendChild( mediaEl );
@@ -67,24 +68,23 @@ function encryptRecord( form, record ) {
             return blobs;
         } )
         .then( function( blobs ) {
-            console.log( 'encrypting xml submission' );
             var submissionXmlEnc = _encryptContent( record.xml, symmetricKey, seed );
             submissionXmlEnc.name = 'submission.xml.enc';
             submissionXmlEnc.md5 = _md5ArrayBuffer( record.xml );
             var xmlFileEl = document.createElementNS( ODK_SUBMISSION_NS, 'encryptedXmlFile' );
+            xmlFileEl.setAttribute( 'type', 'file' );
             xmlFileEl.textContent = submissionXmlEnc.name;
             manifestEl.appendChild( xmlFileEl );
-
             blobs.push( submissionXmlEnc );
             return blobs;
         } )
-        .then( function( blobs ) {
+        /*.then( function( blobs ) {
             // DEBUG
             blobs.forEach( function( blob ) {
                 saveAs( blob, blob.name );
             } );
             return blobs;
-        } )
+        } )*/
         .then( function( blobs ) {
             console.log( 'blobs done', blobs );
             var fileMd5s = blobs.map( function( blob ) {
@@ -96,21 +96,25 @@ function encryptRecord( form, record ) {
             signatureEl.textContent = _getBase64EncryptedElementSignature( elements, forgePublicKey );
             manifestEl.appendChild( signatureEl );
 
-            var manifest = new Blob( [ new XMLSerializer().serializeToString( manifestEl ) ] );
-            manifest.name = 'submission.xml';
+            //var manifest = new Blob( [ new XMLSerializer().serializeToString( manifestEl.documentElement ) ] );
+            //manifest.name = 'submission.xml';
 
-            console.log( 'manifest', manifest );
-            saveAs( manifest, manifest.name );
+            //console.log( 'manifest', manifest );
+            //saveAs( manifest, manifest.name );
 
             // DEBUG
+            /*
             _decryptFiles( blobs, symmetricKey, new Seed( record.instanceId, symmetricKey ) )
                 .then( function( blbs ) {
                     blbs.forEach( function( blob ) {
                         saveAs( blob, blob.name );
                     } );
                 } );
-
-            return { manifest: manifest, encryptedFiles: blobs };
+            */
+            // overwrite record properties so it can be process as a regular submission
+            record.xml = new XMLSerializer().serializeToString( manifestEl );
+            record.files = blobs;
+            return record;
         } );
 }
 
@@ -136,7 +140,7 @@ function b64EncodeUnicode( str ) {
         } ) );
 }
 */
-
+/*
 function _md5( content ) {
     var md = forge.md.md5.create();
     md.update( content );
@@ -145,6 +149,7 @@ function _md5( content ) {
     console.log( 'alt' );
     return md.digest().toHex();
 }
+*/
 
 function _md5ArrayBuffer( buf ) {
     var digest = SparkMD5.ArrayBuffer.hash( buf );
@@ -161,7 +166,7 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
     var messageDigest = md.digest().getBytes();
 
     ///var messageDigest = SparkMD5.ArrayBuffer.hash( forge.util.createBuffer( elementsStr, 'utf8' ), true );
-    console.log( 'digest to encrypt', messageDigest, 'alternative', SparkMD5.hash( elementsStr, true ) );
+    console.log( 'Forge digest to encrypt', messageDigest, 'Spark alternative', SparkMD5.hash( elementsStr, true ) );
 
     var encryptedDigest = publicKey.encrypt( messageDigest, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
     var base64EncryptedDigest = forge.util.encode64( encryptedDigest );
@@ -174,14 +179,12 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
 
     var funcs = files.map( function( file ) {
         return function() {
-            console.time( 'arrayBuf ' + file.name );
             return utils.blobToArrayBuffer( file )
                 .then( function( content ) {
-                    console.timeEnd( 'arrayBuf ' + file.name );
-                    console.log( 'encrypting', file.name );
                     var mediaFileEnc = _encryptContent( content, symmetricKey, seed );
                     mediaFileEnc.name = file.name + '.enc';
                     mediaFileEnc.md5 = _md5ArrayBuffer( content );
+                    //console.log( 'forge:', _md5( content ), 'spark:', mediaFileEnc.md5 );
                     return mediaFileEnc;
                 } );
         };
@@ -238,8 +241,8 @@ function _encryptContent( content, symmetricKey, seed ) {
 
 module.exports = {
     encryptRecord: encryptRecord,
+    Seed: Seed
 };
-
 
 function _decryptFiles( files, symmetricKey, seed ) {
     files = files || [];
