@@ -103,11 +103,11 @@ function encryptRecord( form, record ) {
             signatureEl.textContent = _getBase64EncryptedElementSignature( elements, forgePublicKey );
             manifestEl.appendChild( signatureEl );
 
-            //var manifest = new Blob( [ new XMLSerializer().serializeToString( manifestEl.documentElement ) ] );
+            //var manifest = new Blob( [ new XMLSerializer().serializeToString( manifestEl ) ] );
             //manifest.name = 'submission.xml';
 
             //console.log( 'manifest', manifest );
-            //saveAs( manifest, manifest.name );
+            // saveAs( manifest, manifest.name );
 
             // DEBUG
             /*

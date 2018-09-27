@@ -225,7 +225,6 @@ function _loadRecord( instanceId, confirmed ) {
  * and is not used in offline-capable views.
  */
 function _submitRecord() {
-    var record;
     var redirect = settings.type === 'single' || settings.type === 'edit' || settings.type === 'view';
     var beforeMsg;
     var authLink;
@@ -243,14 +242,16 @@ function _submitRecord() {
     gui.alert( beforeMsg +
         '<div class="loader-animation-small" style="margin: 40px auto 0 auto;"/>', t( 'alert.submission.msg' ), 'bare' );
 
-    record = {
-        'xml': form.getDataStr( include ),
-        'files': fileManager.getCurrentFiles(),
-        'instanceId': form.instanceID,
-        'deprecatedId': form.deprecatedID
-    };
+
 
     return new Promise( function( resolve ) {
+            var record = {
+                'xml': form.getDataStr( include ),
+                'files': fileManager.getCurrentFiles(),
+                'instanceId': form.instanceID,
+                'deprecatedId': form.deprecatedID
+            };
+
             if ( form.encryptionKey ) {
                 var formProps = {
                     encryptionKey: form.encryptionKey,
@@ -258,8 +259,9 @@ function _submitRecord() {
                     version: form.version,
                 };
                 resolve( encryptor.encryptRecord( formProps, record ) );
+            } else {
+                resolve( record );
             }
-            resolve( record );
         } )
         .then( connection.uploadRecord )
         .then( function( result ) {
@@ -359,12 +361,10 @@ function _confirmRecordName( recordName, errorMsg ) {
         } );
 }
 
-// save the translation in case ever required in the future
+// Save the translations in case ever required in the future, by leaving this comment in:
 // t( 'confirm.save.renamemsg', {} )
 
 function _saveRecord( recordName, confirmed, errorMsg ) {
-    var record;
-    var saveMethod;
     var draft = _getDraftStatus();
     var include = ( draft ) ? {
         irrelevant: true
@@ -392,29 +392,45 @@ function _saveRecord( recordName, confirmed, errorMsg ) {
             .catch( function() {} );
     }
 
-    // build the record object
-    record = {
-        'draft': draft,
-        'xml': form.getDataStr( include ),
-        'name': recordName,
-        'instanceId': form.instanceID,
-        'deprecateId': form.deprecatedID,
-        'enketoId': settings.enketoId,
-        'files': fileManager.getCurrentFiles().map( function( file ) {
-            return ( typeof file === 'string' ) ? {
-                name: file
-            } : {
-                name: file.name,
-                item: file
+    return new Promise( function( resolve ) {
+            // build the record object
+            var record = {
+                'draft': draft,
+                'xml': form.getDataStr( include ),
+                'name': recordName,
+                'instanceId': form.instanceID,
+                'deprecateId': form.deprecatedID,
+                'enketoId': settings.enketoId,
+                'files': fileManager.getCurrentFiles()
             };
+
+            // encrypt the record
+            if ( form.encryptionKey && !draft ) {
+                var formProps = {
+                    encryptionKey: form.encryptionKey,
+                    id: form.view.html.id, // TODO: after enketo-core support, use form.id
+                    version: form.version,
+                };
+                resolve( encryptor.encryptRecord( formProps, record ) );
+            } else {
+                resolve( record );
+            }
+        } ).then( function( record ) {
+            // Change file object for database, not sure why this was chosen.
+            record.files = record.files.map( function( file ) {
+                return ( typeof file === 'string' ) ? {
+                    name: file
+                } : {
+                    name: file.name,
+                    item: file
+                };
+            } );
+
+            // Save the record, determine the save method
+            var saveMethod = form.recordName ? 'update' : 'set';
+            console.log( 'saving record with', saveMethod, record );
+            return records[ saveMethod ]( record );
         } )
-    };
-
-    // determine the save method
-    saveMethod = form.recordName ? 'update' : 'set';
-
-    // save the record
-    return records[ saveMethod ]( record )
         .then( function() {
 
             records.removeAutoSavedRecord();
@@ -443,8 +459,6 @@ function _saveRecord( recordName, confirmed, errorMsg ) {
 }
 
 function _autoSaveRecord() {
-    var record;
-
     // Do not auto-save a record if the record was loaded from storage
     // or if the form has enabled encryption
     if ( form.recordName || form.encryptionKey ) {
@@ -452,7 +466,7 @@ function _autoSaveRecord() {
     }
 
     // build the variable portions of the record object
-    record = {
+    var record = {
         'xml': form.getDataStr(),
         'files': fileManager.getCurrentFiles().map( function( file ) {
             return ( typeof file === 'string' ) ? {
