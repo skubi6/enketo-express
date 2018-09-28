@@ -118,7 +118,6 @@ function _md5( content ) {
 
 function _md5ArrayBuffer( buf ) {
     var digest = SparkMD5.ArrayBuffer.hash( buf );
-    console.log( 'digest Spark', digest );
     return digest;
 }
 
@@ -155,7 +154,9 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
         return function() {
             return utils.blobToArrayBuffer( file )
                 .then( function( content ) {
+                    console.time( 'actual encryption of ' + file.name );
                     var mediaFileEnc = _encryptContent( content, symmetricKey, seed );
+                    console.timeEnd( 'actual encryption of ' + file.name );
                     mediaFileEnc.name = file.name + '.enc';
                     mediaFileEnc.md5 = _md5ArrayBuffer( content );
                     //console.log( 'forge:', _md5( content ), 'spark:', mediaFileEnc.md5 );
@@ -177,20 +178,15 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
 
 // equivalent to Java "AES/CFB/PKCS5Padding"
 function _encryptContent( content, symmetricKey, seed ) {
-    console.time( 'forge' );
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
-
-    cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad.bind( cipher.mode );
-
     var iv = seed.getIncrementedSeedArray();
 
+    cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad.bind( cipher.mode );
     cipher.start( {
         iv: iv
     } );
 
     cipher.update( forge.util.createBuffer( content ) );
-
-    // manual padding: https://github.com/digitalbazaar/forge/issues/100#issuecomment-34837467
     var pass = cipher.finish();
     var byteString = cipher.output.getBytes();
 
@@ -205,8 +201,6 @@ function _encryptContent( content, symmetricKey, seed ) {
     for ( var i = 0; i < byteString.length; i++ ) {
         array[ i ] = byteString.charCodeAt( i );
     }
-
-    console.timeEnd( 'forge' );
 
     // write the ArrayBuffer to a blob
     var blob = new Blob( [ array ] );
