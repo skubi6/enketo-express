@@ -14,8 +14,6 @@ var ASYMMETRIC_OPTIONS = {
     md: forge.md.sha256.create(),
     mgf: forge.mgf.mgf1.create( forge.md.sha1.create() )
 };
-var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
-var OPENROSA_XFORMS_NS = 'http://openrosa.org/xforms';
 
 function isSupported() {
     return typeof ArrayBuffer !== 'undefined' &&
@@ -35,6 +33,9 @@ function encryptRecord( form, record ) {
     var forgePublicKey = forge.pki.publicKeyFromPem( publicKeyPem );
     var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, forgePublicKey );
     var seed = new Seed( record.instanceId, symmetricKey ); //_getIvSeedArray( record.instanceId, symmetricKey );
+    var manifest = new Manifest( form.id, form.version );
+    manifest.addElement( 'base64EncryptedKey', base64EncryptedSymmetricKey );
+    manifest.addMetaElement( 'instanceID', record.instanceId );
 
     var elements = [ form.id ];
     if ( form.version ) {
@@ -42,43 +43,11 @@ function encryptRecord( form, record ) {
     }
     elements = elements.concat( [ base64EncryptedSymmetricKey, record.instanceId ] );
 
-    var manifestEl = document.createElementNS( ODK_SUBMISSION_NS, 'data' );
-    manifestEl.setAttribute( '_client', 'enketo' ); // temporary for debugging
-    manifestEl.setAttribute( 'encrypted', 'yes' );
-    manifestEl.setAttribute( 'id', form.id );
-    if ( form.version ) {
-        manifestEl.setAttribute( 'version', form.version );
-    }
-    var keyEl = document.createElementNS( ODK_SUBMISSION_NS, 'base64EncryptedKey' );
-    keyEl.textContent = base64EncryptedSymmetricKey;
-    manifestEl.appendChild( keyEl );
-
-    var metaEl = document.createElementNS( OPENROSA_XFORMS_NS, 'meta' );
-    var instanceIdEl = document.createElementNS( OPENROSA_XFORMS_NS, 'instanceID' );
-    instanceIdEl.textContent = record.instanceId;
-    metaEl.appendChild( instanceIdEl );
-    manifestEl.appendChild( metaEl );
-
     return _encryptMediaFiles( record.files, symmetricKey, seed )
+        .then( manifest.addMediaFiles )
         .then( function( blobs ) {
-            blobs.forEach( function( blob ) {
-                var mediaEl = document.createElementNS( ODK_SUBMISSION_NS, 'media' );
-                var fileEl = document.createElementNS( ODK_SUBMISSION_NS, 'file' );
-                fileEl.setAttribute( 'type', 'file' );
-                fileEl.textContent = blob.name;
-                mediaEl.appendChild( fileEl );
-                manifestEl.appendChild( mediaEl );
-            } );
-            return blobs;
-        } )
-        .then( function( blobs ) {
-            var submissionXmlEnc = _encryptContent( forge.util.createBuffer( record.xml, 'utf8' ), symmetricKey, seed );
-            submissionXmlEnc.name = 'submission.xml.enc';
-            submissionXmlEnc.md5 = _md5Digest( record.xml ).toHex();
-            var xmlFileEl = document.createElementNS( ODK_SUBMISSION_NS, 'encryptedXmlFile' );
-            xmlFileEl.setAttribute( 'type', 'file' );
-            xmlFileEl.textContent = submissionXmlEnc.name;
-            manifestEl.appendChild( xmlFileEl );
+            var submissionXmlEnc = _encryptSubmissionXml( record.xml, symmetricKey, seed );
+            manifest.addXmlSubmissionFile( submissionXmlEnc );
             blobs.push( submissionXmlEnc );
             return blobs;
         } )
@@ -87,13 +56,10 @@ function encryptRecord( form, record ) {
                 return blob.name.substring( 0, blob.name.length - 4 ) + '::' + blob.md5;
             } );
             elements = elements.concat( fileMd5s );
-            console.log( 'elements', elements );
-            var signatureEl = document.createElementNS( ODK_SUBMISSION_NS, 'base64EncryptedElementSignature' );
-            signatureEl.textContent = _getBase64EncryptedElementSignature( elements, forgePublicKey );
-            manifestEl.appendChild( signatureEl );
+            manifest.addElement( 'base64EncryptedElementSignature', _getBase64EncryptedElementSignature( elements, forgePublicKey ) );
 
             // overwrite record properties so it can be process as a regular submission
-            record.xml = new XMLSerializer().serializeToString( manifestEl );
+            record.xml = manifest.getXmlStr();
             record.files = blobs;
             return record;
         } );
@@ -154,6 +120,13 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
     }, Promise.resolve( [] ) );
 }
 
+function _encryptSubmissionXml( xmlStr, symmetricKey, seed ) {
+    var submissionXmlEnc = _encryptContent( forge.util.createBuffer( xmlStr, 'utf8' ), symmetricKey, seed );
+    submissionXmlEnc.name = 'submission.xml.enc';
+    submissionXmlEnc.md5 = _md5Digest( xmlStr ).toHex();
+    return submissionXmlEnc;
+}
+
 /**
  * Symmetric encryption equivalent to Java "AES/CFB/PKCS5Padding"
  * @param {ByteBuffer} content 
@@ -206,6 +179,58 @@ function Seed( instanceId, symmetricKey ) {
         ++ivCounter;
         return ivSeedArray.map( function( code ) { return String.fromCharCode( code ); } ).join( '' );
     };
+}
+
+function Manifest( formId, formVersion ) {
+    var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
+    var OPENROSA_XFORMS_NS = 'http://openrosa.org/xforms';
+    var manifestEl = document.createElementNS( ODK_SUBMISSION_NS, 'data' );
+    // move to constructor
+    manifestEl.setAttribute( '_client', 'enketo' ); // temporary for debugging
+    manifestEl.setAttribute( 'encrypted', 'yes' );
+    manifestEl.setAttribute( 'id', formId );
+    if ( formVersion ) {
+        manifestEl.setAttribute( 'version', formVersion );
+    }
+
+    this.getXmlStr = function() {
+        return new XMLSerializer().serializeToString( manifestEl );
+    };
+    this.addElement = function( nodeName, content ) {
+        var el = document.createElementNS( ODK_SUBMISSION_NS, nodeName );
+        el.textContent = content;
+        manifestEl.appendChild( el );
+    };
+    this.addMetaElement = function( nodeName, content ) {
+        var metaPresent = manifestEl.querySelector( 'meta' );
+        var metaEl = metaPresent || document.createElementNS( OPENROSA_XFORMS_NS, 'meta' );
+        var childEl = document.createElementNS( OPENROSA_XFORMS_NS, nodeName );
+        childEl.textContent = content;
+        metaEl.appendChild( childEl );
+        if ( !metaPresent ) {
+            manifestEl.appendChild( metaEl );
+        }
+    };
+    this.addMediaFiles = function( blobs ) {
+        return blobs.map( _addMediaFile );
+    };
+
+    this.addXmlSubmissionFile = function( blob ) {
+        var xmlFileEl = document.createElementNS( ODK_SUBMISSION_NS, 'encryptedXmlFile' );
+        xmlFileEl.setAttribute( 'type', 'file' ); // temporary, used in HTTP submission logic
+        xmlFileEl.textContent = blob.name;
+        manifestEl.appendChild( xmlFileEl );
+    };
+
+    function _addMediaFile( blob ) {
+        var mediaEl = document.createElementNS( ODK_SUBMISSION_NS, 'media' );
+        var fileEl = document.createElementNS( ODK_SUBMISSION_NS, 'file' );
+        fileEl.setAttribute( 'type', 'file' ); // temporary, used in HTTP submission logic
+        fileEl.textContent = blob.name;
+        mediaEl.appendChild( fileEl );
+        manifestEl.appendChild( mediaEl );
+        return blob;
+    }
 }
 
 module.exports = {
