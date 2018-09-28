@@ -1,8 +1,9 @@
-/**
- * Just a word of warning. Be extra careful changing this code by always testing the decryption of submissions with and without media files
- * in ODK Briefcase. If a regression is created it may be impossible to retrieve encrypted data (also the user likely cannot share the private key).
- */
-
+/**********************************************************************************************
+ * Just a word of warning. Be extra careful changing this code by always testing the decryption 
+ * of submissions with and without media files in ODK Briefcase. If a regression is created it 
+ * may be impossible to retrieve encrypted data (also the user likely cannot share the private 
+ * key).
+ **********************************************************************************************/
 'use strict';
 
 var forge = require( 'node-forge' );
@@ -73,7 +74,7 @@ function encryptRecord( form, record ) {
         .then( function( blobs ) {
             var submissionXmlEnc = _encryptContent( forge.util.createBuffer( record.xml, 'utf8' ), symmetricKey, seed );
             submissionXmlEnc.name = 'submission.xml.enc';
-            submissionXmlEnc.md5 = _md5( record.xml );
+            submissionXmlEnc.md5 = _md5Digest( record.xml ).toHex();
             var xmlFileEl = document.createElementNS( ODK_SUBMISSION_NS, 'encryptedXmlFile' );
             xmlFileEl.setAttribute( 'type', 'file' );
             xmlFileEl.textContent = submissionXmlEnc.name;
@@ -109,20 +110,16 @@ function _encryptSymmetricKey( symmetricKey, publicKey ) {
     return forge.util.encode64( encryptedKey );
 }
 
-
-function _md5( byteString ) {
+function _md5Digest( byteString ) {
     var md = forge.md.md5.create();
     md.update( byteString );
-    return md.digest().toHex();
+    return md.digest();
 }
 
 function _getBase64EncryptedElementSignature( elements, publicKey ) {
-    // HEADS UP! ODK Collect code adds a newline character AT THE END TOO!
+    // ODK Collect code also adds a newline character **at the end**!
     var elementsStr = elements.join( '\n' ) + '\n';
-    var md = forge.md5.create();
-    md.update( elementsStr );
-    var messageDigest = md.digest().getBytes();
-
+    var messageDigest = _md5Digest( elementsStr ).getBytes();
     var encryptedDigest = publicKey.encrypt( messageDigest, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
     var base64EncryptedDigest = forge.util.encode64( encryptedDigest );
     return base64EncryptedDigest;
@@ -140,7 +137,7 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
                     var buffer = forge.util.createBuffer( byteString, 'raw' );
                     var mediaFileEnc = _encryptContent( buffer, symmetricKey, seed );
                     mediaFileEnc.name = file.name + '.enc';
-                    mediaFileEnc.md5 = _md5( byteString );
+                    mediaFileEnc.md5 = _md5Digest( byteString ).toHex();
                     return mediaFileEnc;
                 } );
         };
@@ -180,7 +177,7 @@ function _encryptContent( content, symmetricKey, seed ) {
         throw new Error( 'Encryption failed.' );
     }
 
-    // write the bytes of the string to an ArrayBuffer
+    // Write the bytes of the string to an ArrayBuffer
     var buffer = new ArrayBuffer( byteString.length );
     var array = new Uint8Array( buffer );
 
@@ -188,20 +185,15 @@ function _encryptContent( content, symmetricKey, seed ) {
         array[ i ] = byteString.charCodeAt( i );
     }
 
-    // write the ArrayBuffer to a blob
-    var blob = new Blob( [ array ] );
-
-    return blob;
+    // Write the ArrayBuffer to a blob
+    return new Blob( [ array ] );
 }
 
 function Seed( instanceId, symmetricKey ) {
     var IV_BYTE_LENGTH = 16;
 
     // iv is the md5 hash of the instanceID and the symmetric key
-    var md = forge.md5.create();
-    md.update( instanceId );
-    md.update( symmetricKey );
-    var messageDigest = md.digest().getBytes();
+    var messageDigest = _md5Digest( instanceId + symmetricKey ).getBytes();
     var ivSeedArray = [];
     var ivCounter = 0;
 
