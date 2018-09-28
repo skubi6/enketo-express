@@ -1,8 +1,12 @@
+/**
+ * Just a word of warning. Be extra careful changing this code by always testing the decryption of submissions with and without media files
+ * in ODK Briefcase. If a regression is created it may be impossible to retrieve encrypted data (also the user likely cannot share the private key).
+ */
+
 'use strict';
 
 var forge = require( 'node-forge' );
 var utils = require( './utils' );
-var SparkMD5 = require( 'spark-md5' );
 var SYMMETRIC_ALGORITHM = 'AES-CFB'; // JAVA: "AES/CFB/PKCS5Padding"
 var ASYMMETRIC_ALGORITHM = 'RSA-OAEP'; // JAVA: "RSA/NONE/OAEPWithSHA256AndMGF1Padding"
 var ASYMMETRIC_OPTIONS = {
@@ -67,9 +71,9 @@ function encryptRecord( form, record ) {
             return blobs;
         } )
         .then( function( blobs ) {
-            var submissionXmlEnc = _encryptContent( record.xml, symmetricKey, seed );
+            var submissionXmlEnc = _encryptContent( forge.util.createBuffer( record.xml, 'utf8' ), symmetricKey, seed );
             submissionXmlEnc.name = 'submission.xml.enc';
-            submissionXmlEnc.md5 = _md5ArrayBuffer( record.xml );
+            submissionXmlEnc.md5 = _md5( record.xml );
             var xmlFileEl = document.createElementNS( ODK_SUBMISSION_NS, 'encryptedXmlFile' );
             xmlFileEl.setAttribute( 'type', 'file' );
             xmlFileEl.textContent = submissionXmlEnc.name;
@@ -105,61 +109,38 @@ function _encryptSymmetricKey( symmetricKey, publicKey ) {
     return forge.util.encode64( encryptedKey );
 }
 
-/*
-function _md5( content ) {
-    var md = forge.md.md5.create();
-    md.update( content );
-    var digest = md.digest();
-    console.log( 'digest forge', digest.toHex() );
-    console.log( 'alt' );
-    return md.digest().toHex();
-}
-*/
 
-function _md5ArrayBuffer( buf ) {
-    var digest = SparkMD5.ArrayBuffer.hash( buf );
-    return digest;
+function _md5( byteString ) {
+    var md = forge.md.md5.create();
+    md.update( byteString );
+    return md.digest().toHex();
 }
 
 function _getBase64EncryptedElementSignature( elements, publicKey ) {
     // HEADS UP! ODK Collect code adds a newline character AT THE END TOO!
     var elementsStr = elements.join( '\n' ) + '\n';
-    console.log( 'string to md5', elementsStr );
-
     var md = forge.md5.create();
     md.update( elementsStr );
     var messageDigest = md.digest().getBytes();
-
-    // DEBUG:
-    //var array = [];
-    //for ( var i = 0; i < messageDigest.length; i++ ) {
-    //    array[ i ] = messageDigest.charCodeAt( i );
-    // }
-    //console.log( 'digest byte array (convert to signed integers)', array.map( item => item >= 128 ? item - 256 : item ) );
-    // Until here, it seems we match ODK Collect. It goes hayward afterwards.
-
-    ///var messageDigest = SparkMD5.ArrayBuffer.hash( forge.util.createBuffer( elementsStr, 'utf8' ), true );
-    //console.log( 'Forge digest to RSA encrypt', messageDigest, 'Spark alternative', SparkMD5.hash( elementsStr, true ) );
 
     var encryptedDigest = publicKey.encrypt( messageDigest, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
     var base64EncryptedDigest = forge.util.encode64( encryptedDigest );
     return base64EncryptedDigest;
 }
 
-
 function _encryptMediaFiles( files, symmetricKey, seed ) {
     files = files || [];
 
     var funcs = files.map( function( file ) {
         return function() {
-            return utils.blobToArrayBuffer( file )
-                .then( function( content ) {
-                    console.time( 'actual encryption of ' + file.name );
-                    var mediaFileEnc = _encryptContent( content, symmetricKey, seed );
-                    console.timeEnd( 'actual encryption of ' + file.name );
+            // Note using blobToBinaryString is significantly faster than using blobToArrayBuffer
+            // The difference is cause by forge.util.createBuffer() (which accepts both types as parameter)
+            return utils.blobToBinaryString( file )
+                .then( function( byteString ) {
+                    var buffer = forge.util.createBuffer( byteString, 'raw' );
+                    var mediaFileEnc = _encryptContent( buffer, symmetricKey, seed );
                     mediaFileEnc.name = file.name + '.enc';
-                    mediaFileEnc.md5 = _md5ArrayBuffer( content );
-                    //console.log( 'forge:', _md5( content ), 'spark:', mediaFileEnc.md5 );
+                    mediaFileEnc.md5 = _md5( byteString );
                     return mediaFileEnc;
                 } );
         };
@@ -176,7 +157,12 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
     }, Promise.resolve( [] ) );
 }
 
-// equivalent to Java "AES/CFB/PKCS5Padding"
+/**
+ * Symmetric encryption equivalent to Java "AES/CFB/PKCS5Padding"
+ * @param {ByteBuffer} content 
+ * @param {*} symmetricKey 
+ * @param {Seed} seed 
+ */
 function _encryptContent( content, symmetricKey, seed ) {
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
     var iv = seed.getIncrementedSeedArray();
@@ -186,7 +172,7 @@ function _encryptContent( content, symmetricKey, seed ) {
         iv: iv
     } );
 
-    cipher.update( forge.util.createBuffer( content ) );
+    cipher.update( content );
     var pass = cipher.finish();
     var byteString = cipher.output.getBytes();
 
