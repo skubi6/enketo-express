@@ -140,7 +140,7 @@ function _encryptSubmissionXml( xmlStr, symmetricKey, seed ) {
  */
 function _encryptContent( content, symmetricKey, seed ) {
     var cipher = forge.cipher.createCipher( SYMMETRIC_ALGORITHM, symmetricKey );
-    var iv = seed.getIncrementedSeedArray();
+    var iv = seed.getIncrementedSeedByteString();
 
     cipher.mode.pad = forge.cipher.modes.cbc.prototype.pad.bind( cipher.mode );
     cipher.start( {
@@ -179,7 +179,7 @@ function Seed( instanceId, symmetricKey ) {
         ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ].charCodeAt( 0 );
     }
 
-    this.getIncrementedSeedArray = function() {
+    this.getIncrementedSeedByteString = function() {
         ++ivSeedArray[ ivCounter % ivSeedArray.length ];
         ++ivCounter;
         return ivSeedArray.map( function( code ) { return String.fromCharCode( code ); } ).join( '' );
@@ -227,6 +227,10 @@ function Manifest( formId, formVersion ) {
     };
 
     function _addMediaFile( blob ) {
+        // For now we put each media file under its own <media> element due a bug in Aggregate
+        // https://github.com/opendatakit/aggregate/issues/319
+        // Once, we no longer need compatibility with old Aggregate servers, we can change that
+        // by putting all <file> elements under 1 <media> element
         var mediaEl = document.createElementNS( ODK_SUBMISSION_NS, 'media' );
         var fileEl = document.createElementNS( ODK_SUBMISSION_NS, 'file' );
         fileEl.setAttribute( 'type', 'file' ); // temporary, used in HTTP submission logic
