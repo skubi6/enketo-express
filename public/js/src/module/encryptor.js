@@ -96,10 +96,15 @@ function _encryptMediaFiles( files, symmetricKey, seed ) {
 
     var funcs = files.map( function( file ) {
         return function() {
-            // Note using blobToBinaryString is significantly faster than using blobToArrayBuffer
-            // The difference is cause by forge.util.createBuffer() (which accepts both types as parameter)
-            return utils.blobToBinaryString( file )
-                .then( function( byteString ) {
+            /*
+             * Note using new fileReader().readAsBinaryString() is about 30% faster than using readAsDataURL
+             * However, readAsDataURL() works in IE11, and readAsBinaryString() is a bit frowned upon.
+             * Interestingly, readAsArrayBuffer() is significantly slower than both. That difference is 
+             * caused by forge.util.createBuffer() (which accepts both types as parameter)
+             */
+            return utils.blobToDataUri( file )
+                .then( function( dataUri ) {
+                    var byteString = forge.util.decode64( dataUri.split( ',' )[ 1 ] );
                     var buffer = forge.util.createBuffer( byteString, 'raw' );
                     var mediaFileEnc = _encryptContent( buffer, symmetricKey, seed );
                     mediaFileEnc.name = file.name + '.enc';
@@ -185,8 +190,7 @@ function Manifest( formId, formVersion ) {
     var ODK_SUBMISSION_NS = 'http://opendatakit.org/submissions';
     var OPENROSA_XFORMS_NS = 'http://openrosa.org/xforms';
     var manifestEl = document.createElementNS( ODK_SUBMISSION_NS, 'data' );
-    // move to constructor
-    manifestEl.setAttribute( '_client', 'enketo' ); // temporary for debugging
+    // move to constructor after ES6 class conversion
     manifestEl.setAttribute( 'encrypted', 'yes' );
     manifestEl.setAttribute( 'id', formId );
     if ( formVersion ) {
