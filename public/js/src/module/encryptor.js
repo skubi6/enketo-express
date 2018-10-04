@@ -31,7 +31,7 @@ function encryptRecord( form, record ) {
     var symmetricKey = _generateSymmetricKey();
     var publicKeyPem = '-----BEGIN PUBLIC KEY-----' + form.encryptionKey + '-----END PUBLIC KEY-----';
     var forgePublicKey = forge.pki.publicKeyFromPem( publicKeyPem );
-    var base64EncryptedSymmetricKey = _encryptSymmetricKey( symmetricKey, forgePublicKey );
+    var base64EncryptedSymmetricKey = _rsaEncrypt( symmetricKey, forgePublicKey );
     var seed = new Seed( record.instanceId, symmetricKey ); //_getIvSeedArray( record.instanceId, symmetricKey );
     var manifest = new Manifest( form.id, form.version );
     manifest.addElement( 'base64EncryptedKey', base64EncryptedSymmetricKey );
@@ -71,9 +71,9 @@ function _generateSymmetricKey() {
 }
 
 // Equivalent to "RSA/NONE/OAEPWithSHA256AndMGF1Padding"
-function _encryptSymmetricKey( symmetricKey, publicKey ) {
-    var encryptedKey = publicKey.encrypt( symmetricKey, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
-    return forge.util.encode64( encryptedKey );
+function _rsaEncrypt( byteString, publicKey ) {
+    var encrypted = publicKey.encrypt( byteString, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
+    return forge.util.encode64( encrypted );
 }
 
 function _md5Digest( byteString ) {
@@ -86,9 +86,7 @@ function _getBase64EncryptedElementSignature( elements, publicKey ) {
     // ODK Collect code also adds a newline character **at the end**!
     var elementsStr = elements.join( '\n' ) + '\n';
     var messageDigest = _md5Digest( elementsStr ).getBytes();
-    var encryptedDigest = publicKey.encrypt( messageDigest, ASYMMETRIC_ALGORITHM, ASYMMETRIC_OPTIONS );
-    var base64EncryptedDigest = forge.util.encode64( encryptedDigest );
-    return base64EncryptedDigest;
+    return _rsaEncrypt( messageDigest, publicKey );
 }
 
 function _encryptMediaFiles( files, symmetricKey, seed ) {
@@ -168,16 +166,10 @@ function _encryptContent( content, symmetricKey, seed ) {
 }
 
 function Seed( instanceId, symmetricKey ) {
-    var IV_BYTE_LENGTH = 16;
-
-    // iv is the md5 hash of the instanceID and the symmetric key
+    // iv is the 16-byte md5 hash of the instanceID and the symmetric key
     var messageDigest = _md5Digest( instanceId + symmetricKey ).getBytes();
-    var ivSeedArray = [];
+    var ivSeedArray = messageDigest.split( '' ).map( function( item ) { return item.charCodeAt( 0 ); } );
     var ivCounter = 0;
-
-    for ( var i = 0; i < IV_BYTE_LENGTH; i++ ) {
-        ivSeedArray[ i ] = messageDigest[ ( i % messageDigest.length ) ].charCodeAt( 0 );
-    }
 
     this.getIncrementedSeedByteString = function() {
         ++ivSeedArray[ ivCounter % ivSeedArray.length ];
