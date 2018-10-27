@@ -3,7 +3,7 @@
 var config = require( 'enketo/config' );
 var queryParams = _getAllQueryParams();
 var settings = {};
-var DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
+var DEFAULT_MAX_SIZE = 100 * 1024 * 1024;
 var DEFAULT_LOGIN_URL = '/login';
 var DEFAULT_THANKS_URL = '/thanks';
 var settingsMap = [
